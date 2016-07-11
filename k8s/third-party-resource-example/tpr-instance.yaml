@@ -1,4 +1,4 @@
 metadata:
-  name: my-new-abc-object
+  name: my-new-object
 apiVersion: tuv.xyz/v1
 kind: Abc

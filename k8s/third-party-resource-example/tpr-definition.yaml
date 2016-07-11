@@ -2,6 +2,5 @@ metadata:
   name: abc.tuv.xyz
 apiVersion: extensions/v1beta1
 kind: ThirdPartyResource
-# description: "an sb to instantiate and bind services"
 versions:
 - name: v1
