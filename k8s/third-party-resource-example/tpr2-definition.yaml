@@ -1,0 +1,6 @@
+metadata:
+  name: qrs.tuv.xyz
+apiVersion: extensions/v1beta1
+kind: ThirdPartyResource
+versions:
+- name: v1

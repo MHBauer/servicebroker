@@ -1,0 +1,4 @@
+metadata:
+  name: my-new-object
+apiVersion: tuv.xyz/v1
+kind: Qrs

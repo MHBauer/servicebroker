@@ -1,0 +1,4 @@
+metadata:
+  name: my-2-object
+apiVersion: tuv.xyz/v1
+kind: Qrs
