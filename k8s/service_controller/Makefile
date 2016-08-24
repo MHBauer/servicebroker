@@ -25,10 +25,12 @@ binary-docker:
 	  -v ${CURDIR}:/src/github.com/servicebroker/servicebroker/k8s/service_controller \
 	  -e GOPATH=/ \
 	  golang \
-	  sh -c "go get -d ./... && make binary-local"
+	  sh -c "make binary-local"
 
 binary-local:
-	go get -d ./...
+	go get -v -d github.com/gorilla/context
+	go get -v -d github.com/gorilla/mux
+	go get -v -d github.com/satori/go.uuid
 	go build -o $(EXE) .
 
 #####################

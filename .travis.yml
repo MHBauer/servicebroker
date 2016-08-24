@@ -8,6 +8,7 @@ before_install:
   - make clean
   
 script:
+  - export GOFLAGS=-v
   - go env
   - go version
   - make all
