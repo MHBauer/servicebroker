@@ -31,7 +31,7 @@ binary-local:
 	go get -v -d github.com/gorilla/context
 	go get -v -d github.com/gorilla/mux
 	go get -v -d github.com/satori/go.uuid
-	go build -o $(EXE) .
+	go build -v -x -o $(EXE) .
 
 #####################
 
