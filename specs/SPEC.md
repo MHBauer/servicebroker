@@ -40,11 +40,20 @@ deprovision (delete).
         of service quality or other restrictions.)
  * Instance - a deployment of a service by a backend. Can be bound to
         with a bind call.
+    - a provisionment [find a better word] of the service. 
+    - resources are set aside for an instance.
+    - an instance existing implies that something was done to make a
+      service ready for access.
  * Binding - a dependency of an application on a service that ties the
    application to the service. A binding contains the relevant
    connection information for an application to connect. This is
    information such as the location of the resource, as well as
    authorization information like username and password. 
+    - A registration of use of a service by an external (outside of
+      the service backend) application.
+    - 'accessed with' relationship. ServiceInstance X is accessed with
+      Binding Y.
+    - 
 
 
 ## Use Case
