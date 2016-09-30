@@ -4,7 +4,7 @@
 
 This specification defines an API that provides access to services in
 a generic way that is not tied to a specific platform or cloud
-provider. It is based on the Cloud Foundry API.
+provider. It is based on the Cloud Foundry API. 
 
 
 ## Notation
@@ -57,16 +57,44 @@ deprovision (delete).
 
 
 ## Use Case
-The only requirement for a service to be available to end users is that a service implements the broker API.
+The only requirement for a service to be available to end users is
+that a service implements the broker API.
 
-Thus a service can be entirely provided and managed by a third party, or contained as an internal deployment and managed wholly within a platform.
+Thus a service can be entirely provided and managed by a third party,
+or contained as an internal deployment and managed wholly within a
+platform.
 
-(?maybe take this out, too specific?)
-Some examples from Cloud Foundry:
+(?maybe take this out, too specific?)  Some examples from Cloud
+Foundry:
 * Entire service packaged and deployed by BOSH alongside Cloud Foundry
-* Broker packaged and deployed by BOSH alongside Cloud Foundry, rest of the service deployed and maintained by other means
-* Broker (and optionally service) pushed as an application to Cloud Foundry user space
-* Entire service, including broker, deployed and maintained outside of Cloud Foundry by other means
+* Broker packaged and deployed by BOSH alongside Cloud Foundry, rest
+  of the service deployed and maintained by other means
+* Broker (and optionally service) pushed as an application to Cloud
+  Foundry user space
+* Entire service, including broker, deployed and maintained outside of
+  Cloud Foundry by other means
 
 
-## 
+# API
+
+    * this section describes the api and how to access it
+
+## description of stuff generalized over the whole api
+
+  * version header
+  * authentication
+  * asynchronous operations and polling the last operation
+  * blocking operations
+  * errors
+  * orphans
+  * etc
+
+## Resource Definitions
+
+### catalog
+
+#### /v2/catalog
+
+### service instances
+
+### service bindings
