@@ -78,6 +78,18 @@ Foundry:
 # API
 
     * this section describes the api and how to access it
+    
+notation in this section consisting of a common format with all
+sections being optional
+
+```
+request
+route
+paramters
+curl example
+response
+body
+```
 
 ## description of stuff generalized over the whole api
 
@@ -88,6 +100,42 @@ Foundry:
   * errors
   * orphans
   * etc
+
+### errors 
+
+##### response
+
+Broker failures beyond the scope of the well-defined HTTP response
+codes listed in the individual resource definitions should return an
+appropriate HTTP response code (chosen to accurately reflect the
+nature of the failure) and a body containing a valid JSON Object (not
+an array).
+
+##### body 
+
+All response bodies must be valid JSON. This is for future
+compatibility; it will be easier to add fields in the future if JSON
+is expected rather than to support the cases when a JSON body may or
+may not be returned.
+
+For error responses, the following fields are valid. Others will be
+ignored. If an empty JSON object is returned in the body `{}`, a
+generic message containing the HTTP response code returned by the
+broker will be displayed to the requestor.
+
+|  response |type   | description  |
+|:-:|:-:|:-:|
+|  description | string  | An error message explaining why the request failed. This message will be displayed to the user who initiated the request.  |
+
+
+```json
+{
+  "description": "Something went wrong. Please contact support at http://support.example.com."
+}
+```
+
+
+
 
 ## Resource Definitions
 

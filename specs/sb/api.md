@@ -1291,44 +1291,6 @@ For success responses, the following fields are supported. Others will be ignore
 }
 </pre>
 
-## <a id='broker-errors'></a>Broker Errors ##
-
-### Response ###
-
-Broker failures beyond the scope of the well-defined HTTP response codes listed
-above (like 410 on delete) should return an appropriate HTTP response code
-(chosen to accurately reflect the nature of the failure) and a body containing a valid JSON Object (not an array).
-
-##### Body #####
-
-All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
-
-For error responses, the following fields are valid. Others will be ignored. If an empty JSON object is returned in the body `{}`, a generic message containing the HTTP response code returned by the broker will be displayed to the requestor.
-
-<table border="1" class="nice">
-<thead>
-<tr>
-  <th>Response Field</th>
-  <th>Type</th>
-  <th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-  <td>description</td>
-  <td>string</td>
-  <td>An error message explaining why the request failed. This message will be displayed to the user who initiated the request.
-</td>
-</tr>
-</tbody>
-</table>
-
-<pre class="terminal">
-{
-  "description": "Something went wrong. Please contact support at http://support.example.com."
-}
-</pre>
-
 ## <a id='orphans'></a>Orphans ##
 
 The Cloud Controller is the source of truth for service instances and bindings. Service brokers are expected to have successfully provisioned all the instances and bindings Cloud Controller knows about, and none that it doesn't.
