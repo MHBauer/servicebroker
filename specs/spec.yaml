@@ -1,0 +1,60 @@
+swagger: '2.0'
+info:
+  title: Service Broker API
+  description:
+    This API describes the interaction between a platform and a
+    service broker. The broker implements these endpoints.
+  version: "2.10.0"
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+schemes:
+  - http
+
+basePath: /v2
+
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  /catalog:
+    get:
+      summary: Registered services
+      responses:
+        200:
+          description: list of services
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Service'
+
+definitions:
+  Service:
+    type: object
+    properties:
+      name:
+        type: string
+      id:
+        type: string
+      description:
+        type: string
+      bindable:
+        type: boolean
+      plans:
+        type: array
+        items:
+          $ref: '#/definitions/Plan'
+  Plan:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      description:
+        type: string
+      free:
+        type: boolean
