@@ -3,7 +3,7 @@ info:
   title: Service Broker API
   description:
     This API describes the interaction between a platform and a
-    service broker. The broker implements these endpoints.
+    service broker. the broker implements these endpoints.
   version: "2.10.0"
   license:
     name: Apache 2.0
@@ -34,6 +34,11 @@ paths:
 definitions:
   Service:
     type: object
+    required:
+      - name
+      - id
+      - description
+      - plans
     properties:
       name:
         type: string
@@ -49,6 +54,11 @@ definitions:
           $ref: '#/definitions/Plan'
   Plan:
     type: object
+    required:
+      - id
+      - name
+      - description
+      - free
     properties:
       id:
         type: string
