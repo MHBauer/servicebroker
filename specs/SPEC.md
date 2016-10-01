@@ -13,7 +13,6 @@
 - [API](#api)
     - [description of stuff generalized over the whole api](#description-of-stuff-generalized-over-the-whole-api)
         - [errors](#errors)
-            - [-](#-)
             - [body](#body)
     - [Resource Definitions](#resource-definitions)
         - [catalog](#catalog)
@@ -132,11 +131,17 @@ body
 
   * version header
   * authentication
+  * format
   * asynchronous operations and polling the last operation
   * blocking operations
   * errors
   * orphans
   * etc
+
+### format
+
+All messages with an http message body shall have the body formatted as json (rfc7159).
+<!-- I'm not aware of any messages we're sending that are not formatted as json. -->
 
 ### errors 
 
@@ -161,7 +166,7 @@ generic message containing the HTTP response code returned by the
 broker will be displayed to the requestor.
 
 |  response |type   | description  |
-|:-:|:-:|:-:|
+|---|---|---|
 |  description | string  | An error message explaining why the request failed. This message will be displayed to the user who initiated the request.  |
 
 
@@ -176,6 +181,10 @@ broker will be displayed to the requestor.
 
 ## Resource Definitions
 
+A conforming implementation shall expose the following rest resources.
+  * /v2/catalog
+  * /v2/service_instances
+
 ### catalog
 
 #### /v2/catalog
@@ -183,3 +192,4 @@ broker will be displayed to the requestor.
 ### service instances
 
 ### service bindings
+
