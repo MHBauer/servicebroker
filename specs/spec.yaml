@@ -31,6 +31,38 @@ paths:
             items:
               $ref: '#/definitions/Service'
 
+  '/service_instances/{instance_id}':
+    parameters:
+      - $ref : '#/parameters/instance_id'
+#    put:
+#    patch:
+    delete:
+      summary: deprovisions the instance
+      responses:
+        200:
+          description: instance was deleted
+
+  "/service_instances/{instance_id}/service_binding/{binding_id}":
+    parameters:
+      - $ref : '#/parameters/instance_id'
+      - name: binding_id
+        in: path
+        required: true
+        type: string
+#   put:
+    delete:
+      summary: unbinds the service
+      responses:
+        200:
+          description: service was unbound
+
+parameters:
+  instance_id:
+    name: instance_id
+    type: string
+    in: path
+    required: true
+
 definitions:
   Service:
     type: object
