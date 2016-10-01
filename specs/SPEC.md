@@ -1,5 +1,26 @@
 # Service Broker Specification
 
+**Table of Contents**
+
+- [Service Broker Specification](#service-broker-specification)
+    - [Overview](#overview)
+    - [Notation](#notation)
+    - [Definitions](#definitions)
+    - [Scope](#scope)
+        - [in scope](#in-scope)
+        - [out of scope](#out-of-scope)
+    - [Use Case](#use-case)
+- [API](#api)
+    - [description of stuff generalized over the whole api](#description-of-stuff-generalized-over-the-whole-api)
+        - [errors](#errors)
+            - [-](#-)
+            - [body](#body)
+    - [Resource Definitions](#resource-definitions)
+        - [catalog](#catalog)
+            - [/v2/catalog](#v2catalog)
+        - [service instances](#service-instances)
+        - [service bindings](#service-bindings)
+
 ## Overview
 
 This specification defines an API that provides access to services in
@@ -54,6 +75,22 @@ deprovision (delete).
     - 'accessed with' relationship. ServiceInstance X is accessed with
       Binding Y.
     - 
+
+## Scope 
+
+client <X> platform <-> broker <X> backend
+
+### in scope
+
+communication to a broker from a platform
+
+### out of scope
+
+communication to whatever platform talks to the broker
+
+communication from broker to backend
+
+
 
 
 ## Use Case
