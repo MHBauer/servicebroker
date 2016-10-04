@@ -35,7 +35,8 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 
 ## Definitions
 
- * Application - 
+ * Application - program desiring to use a service. Is in need of
+   access to a service.
  * Service - a product or API that is provided by a third party.
  * Broker is the component which implements the service broker API.
    - advertises a catalog of service offerings and service
@@ -90,8 +91,6 @@ communication to whatever platform talks to the broker
 communication from broker to backend
 
 
-
-
 ## Use Case
 The only requirement for a service to be available to end users is
 that a service implements the broker API.
@@ -110,14 +109,23 @@ Foundry:
 * Entire service, including broker, deployed and maintained outside of
   Cloud Foundry by other means
 
+## managing brokers
+
+### lifecycle
+
+  1. register broker
+  2. 
+  
+### multiple brokers
 
 # API
 
     * this section describes the api and how to access it
     
+    
+???
 notation in this section consisting of a common format with all
 sections being optional
-
 ```
 request
 route
@@ -137,6 +145,40 @@ body
   * errors
   * orphans
   * etc
+
+### version header
+Requests from the Cloud Controller to the broker contain a header that defines
+the version number of the Broker API that Cloud Controller will use.
+This header will be useful in future minor revisions of the API to allow
+brokers to reject requests from Cloud Controllers that they do not understand.
+While minor API revisions will always be additive, it is possible that brokers
+will come to depend on a feature that was added after 2.0, so they may use this
+header to reject the request.
+Error messages from the broker in this situation should inform the operator of
+what the required and actual version numbers are so that an operator can go
+upgrade Cloud Controller and resolve the issue.
+A broker should respond with a `412 Precondition Failed` message when rejecting
+a request.
+
+The version numbers are in the format `MAJOR.MINOR`, using semantic versioning
+such that 2.9 comes before 2.10.
+An example of this header as of publication time is:
+
+`X-Broker-Api-Version: 2.9`
+
+### authentication
+
+A client authenticates with a broker using HTTP basic authentication
+(the `Authorization:` header) on every request and will reject any
+broker registrations that do not contain a username and password.
+
+The broker is responsible for checking the username and password and
+returning a `401 Unauthorized` message if credentials are invalid.
+
+Connecting to a broker using SSL is supported. OPTIONAL / RECOMMENDED. 
+<!-- This should probably be REQUIRED -->
+
+
 
 ### format
 
@@ -180,6 +222,8 @@ broker will be displayed to the requestor.
 
 
 ## Resource Definitions
+
+???swagger definition as truth???
 
 A conforming implementation shall expose the following rest resources.
   * /v2/catalog

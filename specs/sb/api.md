@@ -45,37 +45,6 @@ different URL prefixes and credentials.
 
 <image src="images/v2services-new.png" width="960" height="720" style='background-color:#fff'>
 
-## <a id='api-version-header'></a>API Version Header ##
-
-Requests from the Cloud Controller to the broker contain a header that defines
-the version number of the Broker API that Cloud Controller will use.
-This header will be useful in future minor revisions of the API to allow
-brokers to reject requests from Cloud Controllers that they do not understand.
-While minor API revisions will always be additive, it is possible that brokers
-will come to depend on a feature that was added after 2.0, so they may use this
-header to reject the request.
-Error messages from the broker in this situation should inform the operator of
-what the required and actual version numbers are so that an operator can go
-upgrade Cloud Controller and resolve the issue.
-A broker should respond with a `412 Precondition Failed` message when rejecting
-a request.
-
-The version numbers are in the format `MAJOR.MINOR`, using semantic versioning
-such that 2.9 comes before 2.10.
-An example of this header as of publication time is:
-
-`X-Broker-Api-Version: 2.9`
-
-## <a id='authentication'></a>Authentication ##
-
-Cloud Controller (final release v145+) authenticates with the Broker using HTTP
-basic authentication (the `Authorization:` header) on every request and will
-reject any broker registrations that do not contain a username and password.
-The broker is responsible for checking the username and password and returning
-a `401 Unauthorized` message if credentials are invalid.
-Cloud Controller supports connecting to a broker using SSL if additional
-security is desired.
-
 ## <a id='catalog-mgmt'></a>Catalog Management ##
 
 The first endpoint that a broker must implement is the service catalog.
