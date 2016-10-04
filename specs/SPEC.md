@@ -246,3 +246,12 @@ with the specified HTTP methods.
 
 ### service bindings
 
+
+
+## Example flow
+
+ 1. get catalog
+ 2. create instance
+ 3. bind instance, create binding
+ 4. unbind instance, delete binding
+ 5. delete instance
