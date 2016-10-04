@@ -225,11 +225,18 @@ broker will be displayed to the requestor.
 
 ## Resource Definitions
 
-???swagger definition as truth???
+???swagger definition as ground truth. in the event that the text and
+swagger are in conflict, swagger has precedence.???
 
-A conforming implementation shall expose the following rest resources.
+A conforming implementation shall expose the following rest resources
+with the specified HTTP methods.
   * /v2/catalog
+      * `GET /v2/catalog`
   * /v2/service_instances
+      * `PUT /v2/service_instances/{instance_id}`
+      * `DELETE /v2/service_instances/{instance_id}`
+      * `PUT /v2/service_instances/{instance_id}/service_bindings/{binding_id}`
+      * `DELETE /v2/service_instances/{instance_id}/service_bindings/{binding_id}`
 
 ### catalog
 
