@@ -178,6 +178,8 @@ returning a `401 Unauthorized` message if credentials are invalid.
 Connecting to a broker using SSL is supported. OPTIONAL / RECOMMENDED. 
 <!-- This should probably be REQUIRED -->
 
+Your service broker should validate the username and password sent in every
+request; otherwise, anyone could curl your broker to delete service instances.
 
 
 ### format
