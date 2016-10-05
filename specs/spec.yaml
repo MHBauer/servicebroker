@@ -84,6 +84,8 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/Plan'
+      metadata:
+        $ref: '#/definitions/ServiceMetadata'
   Plan:
     type: object
     required:
@@ -100,3 +102,62 @@ definitions:
         type: string
       free:
         type: boolean
+      metadata:
+        $ref: '#/definitions/PlanMetadata'
+  ServiceMetadata:
+    type: object
+    description: Optional data that a client may show to a user to allow a choice among many available services. These fields are suggestions based on existing practice.
+
+      We should probably standardize some of these, but maybe it is better to leave them completely open ended.
+    properties:
+      displayName:
+        type: string
+        description: The name of the service to be displayed in graphical clients.
+      imageUrl:
+        type: string
+        description: The URL to an image. A visual image that a graphical client could render to a user.
+      longDescription:
+        type: string
+        description: Long description. I do not understand the restriction of using the Service.description on the service itself. mhb suggests we remove this field.
+      providerDisplayName:
+        type: string
+        description: The name of the upstream entity providing the actual service.
+      documentationUrl:
+        type: string
+        description: Link to documentation page for service.
+      supportUrl:
+        type: string
+        description: Link to support for the service.
+  PlanMetadata:
+    type: object
+    description: Optional data that a client may show to a user to allow a choice among many available plans. These fields are suggestions based on existing practice.
+    properties:
+      bullets:
+        type: array
+        items:
+          type: string
+          description: An individual feature of this plan.
+        description: Features of this plan, to be displayed in a bulleted-list.
+      costs: #TODO this seems like it should be standardized
+        description: 'An array-of-objects that describes the costs of a service, in what currency, and the unit of measure. If there are multiple costs, all of them could be billed to the user (such as a monthly + usage costs at once). Each object must provide the following keys: `amount: { usd: float }, unit: string` This indicates the cost in USD of the service plan, and how frequently the cost is occurred, such as "MONTHLY" or "per 1000 messages".'
+        type: array
+        items:
+          $ref: '#/definitions/Cost'
+      displayName:
+        type: string
+        description: The name of the service to be displayed in graphical clients.
+  Cost:
+    type: object
+    description: describes costs
+    properties:
+      amount:
+        type: object
+        description: Contains the currency name and the quantity.
+        properties:
+          currency:
+            type: string
+          quantity:
+            type: string
+      unit:
+        type: string
+        description: What you are getting for said cost. Size of memory. Time of compute. Time of access. 100MB, Monthly, Etc.
