@@ -184,8 +184,14 @@ request; otherwise, anyone could curl your broker to delete service instances.
 
 ### format
 
-All messages with an http message body shall have the body formatted as json (rfc7159).
+All messages with an http message body shall have the body formatted
+as json (rfc7159).
 <!-- I'm not aware of any messages we're sending that are not formatted as json. -->
+
+For example, responses should return an empty object '{}' even when
+there is no content to return. This is not to be interpreted as being
+in contravention to the HTTP spec for responses that MUST NOT have a
+message body.
 
 ### errors 
 

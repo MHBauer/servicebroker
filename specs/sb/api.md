@@ -456,8 +456,6 @@ Responses with any other status code will be interpreted as an error or invalid 
 
 ##### Body #####
 
-All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
-
 For success responses, the following fields are valid.
 
 <table border="1" class="nice">
@@ -646,8 +644,6 @@ Responses with any other status code will be interpreted as a failure. Brokers c
 
 ##### Body #####
 
-All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
-
 For success responses, the following fields are supported. Others will be ignored. For error responses, see [Broker Errors](#broker-errors).
 
 <table border="1" class="nice">
@@ -819,8 +815,6 @@ $ curl http://username:password@broker-url/v2/service_instances/:instance_id -d 
 Responses with any other status code will be interpreted as a failure. Brokers can include a user-facing message in the `description` field; for details see [Broker Errors](#broker-errors).
 
 ##### Body #####
-
-All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
 
 For success responses, the following fields are supported. Others will be ignored. For error responses, see [Broker Errors](#broker-errors).
 
@@ -1018,8 +1012,6 @@ Responses with any other status code will be interpreted as a failure and an unb
 
 ##### Body #####
 
-All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
-
 For success responses, the following fields are supported. Others will be ignored. For error responses, see [Broker Errors](#broker-errors).
 
 <table border="1" class="nice">
@@ -1076,6 +1068,9 @@ delete any resources it created in bind.
 Usually this means that an application immediately cannot access the resource.
 
 ### Request ###
+
+
+
 
 ##### Route #####
 `DELETE /v2/service_instances/:instance_id/service_bindings/:binding_id`
@@ -1140,8 +1135,6 @@ $ curl 'http://username:password@broker-url/v2/service_instances/:instance_id/
 Responses with any other status code will be interpreted as a failure and the binding will remain in the Cloud Controller database. Brokers can include a user-facing message in the `description` field; for details see [Broker Errors](#broker-errors).
 
 ##### Body #####
-
-All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
 
 For a success response, the expected response body is `{}`.
 
@@ -1232,8 +1225,6 @@ $ curl 'http://username:password@broker-url/v2/service_instances/:instance_id?se
 Responses with any other status code will be interpreted as a failure and the service instance will remain in the Cloud Controller database. Brokers can include a user-facing message in the `description` field; for details see [Broker Errors](#broker-errors).
 
 ##### Body #####
-
-All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
 
 For success responses, the following fields are supported. Others will be ignored. For error responses, see [Broker Errors](#broker-errors).
 
