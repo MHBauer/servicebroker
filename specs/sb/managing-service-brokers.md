@@ -59,52 +59,7 @@ Really purge service offering v1-test from Cloud Foundry? y
 OK
 ```
 
-### <a id='purge-service-instance'></a>Purge a Service Instance###
-
-The following command will delete a single service instance, its service bindings and its service keys from the Cloud Controller database, without making any API calls to a service broker.
-This can be helpful in instances a Service Broker is not conforming to the Service Broker API and not returning a 200 or 410 to requests to delete the service instance.
-
-<pre class="terminal">
-$ cf purge-service-instance mysql-dev
-WARNING: This operation assumes that the service broker responsible for this
-service instance is no longer available or is not responding with a 200 or 410,
-and the service instance has been deleted, leaving orphan records in Cloud
-Foundry's database. All knowledge of the service instance will be removed from
-Cloud Foundry, including service bindings and service keys.
-
-Really purge service instance mysql-dev from Cloud Foundry?> y
-Purging service mysql-dev...
-OK
-</pre>
-
-`purge-service-instance` requires cf-release v218 and cf CLI 6.14.0.
-
 ## <a id='possible-errors'></a>Possible Errors ##
-
-If incorrect basic auth credentials are provided:
-
-<pre class="terminal">
-Server error, status code: 500, error code: 10001, message: Authentication
-failed for the service broker API.
-Double-check that the username and password are correct:
-    http://github-broker.a1-app.example.com/v2/catalog
-</pre>
-
-If you receive the following errors, check your broker logs.
-You may have an internal error.
-
-<pre class="terminal">
-Server error, status code: 500, error code: 10001, message:
-    The service broker response was not understood
-
-Server error, status code: 500, error code: 10001, message:
-    The service broker API returned an error from
-    http://github-broker.a1-app.example.com/v2/catalog: 404 Not Found
-
-Server error, status code: 500, error code: 10001, message:
-    The service broker API returned an error from
-    http://github-broker.primo.example.com/v2/catalog: 500 Internal Server Error
-</pre>
 
 If your broker's catalog of services and plans violates validation of presence,
 uniqueness, and type, you will receive meaningful errors.

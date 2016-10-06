@@ -3,18 +3,23 @@ title: Binding Credentials
 owner: Core Services
 ---
 
-A bindable service returns credentials that an application can consume in response to the `cf bind` API call.
-Cloud Foundry writes these credentials to the [`VCAP_SERVICES`](../devguide/deploy-apps/environment-variable.html#VCAP-SERVICES) environment variable.
-In some cases, buildpacks write a subset of these credentials to other
-environment variables that frameworks might need.
+A bindable service returns credentials that an application can consume
+in response to the `cf bind` API call.  Cloud Foundry writes these
+credentials to the
+[`VCAP_SERVICES`](../devguide/deploy-apps/environment-variable.html#VCAP-SERVICES)
+environment variable.  In some cases, buildpacks write a subset of
+these credentials to other environment variables that frameworks might
+need.
 
-Choose from the following list of credential fields if possible, though you can provide additional fields as needed.
-Refer to the [Using Bound Services](../devguide/services/managing-services.html#use) section of the
-_Managing Service Instances with the CLI_ topic for information on how these
-credentials are consumed.
+Choose from the following list of credential fields if possible,
+though you can provide additional fields as needed.  Refer to the
+[Using Bound Services](../devguide/services/managing-services.html#use)
+section of the _Managing Service Instances with the CLI_ topic for
+information on how these credentials are consumed.
 
-<p class='note'><strong>Note</strong>: If you provide a service that supports a connection string, provide the <code>uri</code> key for buildpacks and
-application libraries to use.</p>
+<p class='note'><strong>Note</strong>: If you provide a service that
+supports a connection string, provide the <code>uri</code> key for
+buildpacks and application libraries to use.</p>
 
 <table border="1" class="nice">
   <tr>

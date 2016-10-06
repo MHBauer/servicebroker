@@ -80,27 +80,61 @@ A service dashboard should implement the OAuth2 Authorization Code Grant type ([
 
 1. When a user visits the service dashboard at the value of `dashboard_url`, the dashboard should redirect the user's browser to the Authorization Endpoint and include its `client_id`, a `redirect_uri` (callback URL with domain matching the value of `dashboard_client.redirect_uri`), and list of requested scopes.
 
-    Scopes are permissions included in the token a dashboard client will receive from UAA, and which Cloud Controller uses to enforce access. A client should request the minimum scopes it requires. The minimum scopes required for this workflow are `cloud_controller_service_permissions.read` and `openid`. For an explanation of the scopes available to dashboard clients, see [On Scopes](#on-scopes).
+    Scopes are permissions included in the token a dashboard client
+    will receive from UAA, and which Cloud Controller uses to enforce
+    access. A client should request the minimum scopes it
+    requires. The minimum scopes required for this workflow are
+    `cloud_controller_service_permissions.read` and `openid`. For an
+    explanation of the scopes available to dashboard clients, see
+    [On Scopes](#on-scopes).
 
-1. UAA authenticates the user by redirecting the user to the Login Server, where the user then approves or denies the scopes requested by the service dashboard. The user is presented with human readable descriptions for permissions representing each scope. After authentication, the user's browser is redirected back to the Authorization endpoint on UAA with an authentication cookie for the UAA.
+1. UAA authenticates the user by redirecting the user to the Login
+   Server, where the user then approves or denies the scopes requested
+   by the service dashboard. The user is presented with human readable
+   descriptions for permissions representing each scope. After
+   authentication, the user's browser is redirected back to the
+   Authorization endpoint on UAA with an authentication cookie for the
+   UAA.
 
-1. Assuming the user grants access, UAA redirects the user's browser back to the value of `redirect_uri` the dashboard provided in its request to the Authorization Endpoint.  The `Location` header in the response includes an authorization code.
+1. Assuming the user grants access, UAA redirects the user's browser
+   back to the value of `redirect_uri` the dashboard provided in its
+   request to the Authorization Endpoint.  The `Location` header in
+   the response includes an authorization code.
 
     ```
     HTTP/1.1 302 Found
     Location: https://p-mysql.example.com/manage/auth?code=F45jH
     ```
 
-1. The dashboard UI should then request an access token from the Token Endpoint by including the authorization code received in the previous step.  When making the request the dashboard must authenticate with UAA by passing the client `id` and `secret` in a basic auth header. UAA will verify that the client id matches the client it issued the code to. The dashboard should also include the `redirect_uri` used to obtain the authorization code for verification.
+1. The dashboard UI should then request an access token from the Token
+   Endpoint by including the authorization code received in the
+   previous step.  When making the request the dashboard must
+   authenticate with UAA by passing the client `id` and `secret` in a
+   basic auth header. UAA will verify that the client id matches the
+   client it issued the code to. The dashboard should also include the
+   `redirect_uri` used to obtain the authorization code for
+   verification.
 
-1. UAA authenticates the dashboard client, validates the authorization code, and ensures that the redirect URI received matches the URI used to redirect the client when the authorization code was issues.  If valid, UAA responds back with an access token and a refresh token.
+1. UAA authenticates the dashboard client, validates the authorization
+   code, and ensures that the redirect URI received matches the URI
+   used to redirect the client when the authorization code was issues.
+   If valid, UAA responds back with an access token and a refresh
+   token.
 
 ### <a id='checking-user-permissions'></a>Checking User Permissions ###
 
-UAA is responsible for authenticating a user and providing the service with an access token with the requested permissions. However, after the user has been logged in, it is the responsibility of the service dashboard to verify that the user making the request to manage an instance currently has access to that service instance.
+UAA is responsible for authenticating a user and providing the service
+with an access token with the requested permissions. However, after
+the user has been logged in, it is the responsibility of the service
+dashboard to verify that the user making the request to manage an
+instance currently has access to that service instance.
 
-The service can accomplish this with a GET to the `/v2/service_instances/:guid/permissions` endpoint on the Cloud Controller. The request must include a token for an authenticated user and the service instance guid. The token is the same one obtained from the UAA in response to a request to the Token Endpoint, described above.
-.
+The service can accomplish this with a GET to the
+`/v2/service_instances/:guid/permissions` endpoint on the Cloud
+Controller. The request must include a token for an authenticated user
+and the service instance guid. The token is the same one obtained from
+the UAA in response to a request to the Token Endpoint, described
+above.  .
 
 Example Request:
 
@@ -119,7 +153,12 @@ Response:
 }
 ```
 
-The response will indicate to the service whether this user is allowed to manage the given instance. A `true` value for the `manage` key indicates sufficient permissions; `false` would indicate insufficient permissions.  Since administrators may change the permissions of users, the service should check this endpoint whenever a user uses the SSO flow to access the service's UI.
+The response will indicate to the service whether this user is allowed
+to manage the given instance. A `true` value for the `manage` key
+indicates sufficient permissions; `false` would indicate insufficient
+permissions.  Since administrators may change the permissions of
+users, the service should check this endpoint whenever a user uses the
+SSO flow to access the service's UI.
 
 ### <a id="on-scopes"></a> On Scopes
 
@@ -143,13 +182,36 @@ Dashboards with extended capabilities may need to request these additional scope
 
 ## <a id='reference-implementation'></a>Reference Implementation ##
 
-The [MySQL Service Broker][example-broker] is an example of a broker that also implements a SSO dashboard. The login flow is implemented using the [OmniAuth library](https://github.com/intridea/omniauth) and a custom [UAA OmniAuth Strategy](https://github.com/cloudfoundry/omniauth-uaa-oauth2). See this [OmniAuth wiki page](https://github.com/intridea/omniauth/wiki/Strategy-Contribution-Guide) for instructions on how to create your own strategy.
+The [MySQL Service Broker][example-broker] is an example of a broker
+that also implements a SSO dashboard. The login flow is implemented
+using the [OmniAuth library](https://github.com/intridea/omniauth) and
+a custom
+[UAA OmniAuth Strategy](https://github.com/cloudfoundry/omniauth-uaa-oauth2). See
+this
+[OmniAuth wiki page](https://github.com/intridea/omniauth/wiki/Strategy-Contribution-Guide)
+for instructions on how to create your own strategy.
 
-The UAA OmniAuth strategy is used to first get an authorization code, as documented in [this section](https://github.com/cloudfoundry/uaa/blob/master/docs/UAA-APIs.rst#authorization-code-grant) of the UAA documentation. The user is redirected back to the service (as specified by the `callback_path` option or the default `auth/cloudfoundry/callback` path) with the authorization code. Before the application / action is dispatched, the OmniAuth strategy uses the authorization code to [get a token](https://github.com/cloudfoundry/uaa/blob/master/docs/UAA-APIs.rst#client-obtains-token-post-oauth-token) and uses the token to request information from UAA to fill the `omniauth.auth` environment variable. When OmniAuth returns control to the application, the `omniauth.auth` environment variable hash will be filled with the token and user information obtained from UAA as seen in the [Auth Controller](https://github.com/cloudfoundry/cf-mysql-broker/blob/master/app/controllers/manage/auth_controller.rb).
+The UAA OmniAuth strategy is used to first get an authorization code,
+as documented in
+[this section](https://github.com/cloudfoundry/uaa/blob/master/docs/UAA-APIs.rst#authorization-code-grant)
+of the UAA documentation. The user is redirected back to the service
+(as specified by the `callback_path` option or the default
+`auth/cloudfoundry/callback` path) with the authorization code. Before
+the application / action is dispatched, the OmniAuth strategy uses the
+authorization code to
+[get a token](https://github.com/cloudfoundry/uaa/blob/master/docs/UAA-APIs.rst#client-obtains-token-post-oauth-token)
+and uses the token to request information from UAA to fill the
+`omniauth.auth` environment variable. When OmniAuth returns control to
+the application, the `omniauth.auth` environment variable hash will be
+filled with the token and user information obtained from UAA as seen
+in the
+[Auth Controller](https://github.com/cloudfoundry/cf-mysql-broker/blob/master/app/controllers/manage/auth_controller.rb).
 
 ## <a id='restrictions'></a>Restrictions ##
 
- * UAA clients are scoped to services.  There must be a `dashboard_client` entry for each service that uses SSO integration.
+ * UAA clients are scoped to services.  There must be a
+   `dashboard_client` entry for each service that uses SSO
+   integration.
  * Each `dashboard_client id` must be unique across the CloudFoundry deployment.
 
 ## <a id="resources"></a>Resources ##
