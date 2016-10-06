@@ -1,240 +1,52 @@
 # Service Broker Specification
 
-**Table of Contents**
+# Abstract
 
-- [Service Broker Specification](#service-broker-specification)
-    - [Overview](#overview)
-    - [Notation](#notation)
-    - [Definitions](#definitions)
-    - [Scope](#scope)
-        - [in scope](#in-scope)
-        - [out of scope](#out-of-scope)
-- [Index](#index)
-    - [Table of Contents](#table-of-contents)
-- [Overview](#overview)
-    - [<a id='architecture-terminology'></a>Architecture & Terminology](#a-idarchitecture-terminologyaarchitecture--terminology)
-    - [<a id='implementation-deployment'></a>Implementation & Deployment](#a-idimplementation-deploymentaimplementation--deployment)
-- [API](#api)
-    - [<a id='changelog'></a>Document Changelog](#a-idchangelogadocument-changelog)
-    - [<a id='changes'></a>Changes](#a-idchangesachanges)
-        - [<a id='change-policy'></a>Change Policy](#a-idchange-policyachange-policy)
-        - [<a id='api-changes-since-v2-8'></a>Changes Since v2.8](#a-idapi-changes-since-v2-8achanges-since-v28)
-    - [<a id='dependencies'></a>Dependencies](#a-iddependenciesadependencies)
-    - [<a id='api-overview'></a>API Overview](#a-idapi-overviewaapi-overview)
-    - [<a id='catalog-mgmt'></a>Catalog Management](#a-idcatalog-mgmtacatalog-management)
-        - [Request](#request)
-            - [Route](#route)
-            - [cURL](#curl)
-        - [Response](#response)
-            - [Body - Schema of Service Objects](#body---schema-of-service-objects)
-        - [<a id='create-broker'></a>Adding a Broker to Cloud Foundry](#a-idcreate-brokeraadding-a-broker-to-cloud-foundry)
-    - [<a id='asynchronous-operations'></a>Asynchronous Operations](#a-idasynchronous-operationsaasynchronous-operations)
-        - [<a id='sequence-diagram'></a>Sequence Diagram](#a-idsequence-diagramasequence-diagram)
-        - [<a id='blocking'></a>Blocking Operations](#a-idblockingablocking-operations)
-        - [<a id='when-to-use-async'></a>When to use Asynchronous Service Operations](#a-idwhen-to-use-asyncawhen-to-use-asynchronous-service-operations)
-    - [<a id='polling'></a>Polling Last Operation (async only)](#a-idpollingapolling-last-operation-async-only)
-        - [Request](#request)
-            - [-](#-)
-            - [Parameters](#parameters)
-            - [cURL](#curl)
-        - [Response](#response)
-            - [-](#-)
-        - [<a id='polling-interval'></a> Polling Interval](#a-idpolling-intervala-polling-interval)
-        - [<a id='max-polling-duration'></a>Maximum Polling Duration](#a-idmax-polling-durationamaximum-polling-duration)
-        - [<a id='additional-resources'></a>Additional Resources](#a-idadditional-resourcesaadditional-resources)
-    - [<a id='provisioning'></a>Provisioning](#a-idprovisioningaprovisioning)
-        - [Request](#request)
-            - [-](#-)
-            - [Body](#body)
-            - [cURL](#curl)
-        - [Response](#response)
-            - [-](#-)
-    - [<a id='updating_service_instance'></a>Updating a Service Instance](#a-idupdatingserviceinstanceaupdating-a-service-instance)
-        - [Request](#request)
-            - [-](#-)
-            - [Body](#body)
-            - [cURL](#curl)
-        - [Response](#response)
-            - [-](#-)
-    - [<a id='binding'></a>Binding](#a-idbindingabinding)
-        - [<a id='binding-types'></a>Types of Binding](#a-idbinding-typesatypes-of-binding)
-            - [<a id='binding-credentials'></a>Credentials](#a-idbinding-credentialsacredentials)
-            - [<a id='binding-syslog-drain'></a>Application Log Streaming](#a-idbinding-syslog-drainaapplication-log-streaming)
-            - [<a id='binding-route-services'></a>Route Services](#a-idbinding-route-servicesaroute-services)
-            - [<a id='binding-volume-services'></a>Volume Services (Experimental)](#a-idbinding-volume-servicesavolume-services-experimental)
-        - [Request](#request)
-            - [-](#-)
-            - [Body](#body)
-            - [cURL](#curl)
-        - [Response](#response)
-            - [-](#-)
-    - [<a id='unbinding'></a>Unbinding](#a-idunbindingaunbinding)
-        - [Request](#request)
-            - [-](#-)
-            - [Parameters](#parameters)
-            - [cURL](#curl)
-        - [Response](#response)
-            - [-](#-)
-    - [<a id='deprovisioning'></a>Deprovisioning](#a-iddeprovisioningadeprovisioning)
-        - [Request](#request)
-            - [-](#-)
-            - [Parameters](#parameters)
-            - [cURL](#curl)
-        - [Response](#response)
-            - [-](#-)
-    - [<a id='orphans'></a>Orphans](#a-idorphansaorphans)
-- [Managing Service Brokers](#managing-service-brokers)
-    - [<a id='quick-start'></a>Quick Start](#a-idquick-startaquick-start)
-    - [<a id='register-broker'></a>Register a Broker](#a-idregister-brokeraregister-a-broker)
-        - [Standard Private Brokers](#standard-private-brokers)
-        - [Space-Scoped Private Brokers](#space-scoped-private-brokers)
-        - [<a id='make-plans-public'></a>Make Plans Public](#a-idmake-plans-publicamake-plans-public)
-        - [<a id='multiple-brokers'></a>Multiple Brokers, Services, Plans](#a-idmultiple-brokersamultiple-brokers-services-plans)
-    - [<a id='list-brokers'></a> List Service Brokers](#a-idlist-brokersa-list-service-brokers)
-    - [<a id='update-broker'></a>Update a Broker](#a-idupdate-brokeraupdate-a-broker)
-    - [<a id='rename-broker'></a>Rename a Broker](#a-idrename-brokerarename-a-broker)
-    - [<a id='remove-broker'></a>Remove a Broker](#a-idremove-brokeraremove-a-broker)
-        - [<a id='purge-service'></a>Purge a Service](#a-idpurge-serviceapurge-a-service)
-        - [<a id='purge-service-instance'></a>Purge a Service Instance](#a-idpurge-service-instanceapurge-a-service-instance)
-    - [<a id='possible-errors'></a>Possible Errors](#a-idpossible-errorsapossible-errors)
-- [Access Control](#access-control)
-    - [<a id='cli'></a>Using the CLI](#a-idcliausing-the-cli)
-        - [<a id='prerequisites'></a>Prerequisites](#a-idprerequisitesaprerequisites)
-        - [<a id='display-access'></a>Display Access to Service Plans](#a-iddisplay-accessadisplay-access-to-service-plans)
-        - [<a id='enable-access'></a>Enable Access to Service Plans](#a-idenable-accessaenable-access-to-service-plans)
-        - [<a id='disable-access'></a>Disable Access to Service Plans](#a-iddisable-accessadisable-access-to-service-plans)
-            - [Limitations](#limitations)
-    - [<a id='curl'></a>Using cf curl](#a-idcurlausing-cf-curl)
-        - [<a id='enable-access-curl'></a>Enable Access to Service Plans](#a-idenable-access-curlaenable-access-to-service-plans)
-            - [Enable access to a plan for all organizations](#enable-access-to-a-plan-for-all-organizations)
-            - [Enable access to a private plan for a particular organization](#enable-access-to-a-private-plan-for-a-particular-organization)
-        - [<a id='disable-access-curl'></a>Disable Access to Service Plans](#a-iddisable-access-curladisable-access-to-service-plans)
-            - [Disable access to a plan for all organizations](#disable-access-to-a-plan-for-all-organizations)
-            - [Disable access to a private plan for a particular organization](#disable-access-to-a-private-plan-for-a-particular-organization)
-- [Catalog Metadata](#catalog-metadata)
-    - [<a id='community-driven-standards'></a>Community-Driven Standards](#a-idcommunity-driven-standardsacommunity-driven-standards)
-    - [<a id='services-metadata-fields'></a>Services Metadata Fields](#a-idservices-metadata-fieldsaservices-metadata-fields)
-    - [<a id='plan-metadata-fields'></a>Plan Metadata Fields](#a-idplan-metadata-fieldsaplan-metadata-fields)
-    - [<a id='example-broker-response'></a>Example Broker Response Body](#a-idexample-broker-responseaexample-broker-response-body)
-    - [<a id='example-cc-response'></a>Example Cloud Controller Response Body](#a-idexample-cc-responseaexample-cloud-controller-response-body)
-- [Dashboard Single Sign-On](#dashboard-single-sign-on)
-    - [<a id='introduction'></a>Introduction](#a-idintroductionaintroduction)
-    - [<a id='enabling-the-feature-in-cloudfoundry'></a>Enabling the feature in Cloud Foundry](#a-idenabling-the-feature-in-cloudfoundryaenabling-the-feature-in-cloud-foundry)
-    - [<a id='broker-responsibilities'></a>Service Broker Responsibilities](#a-idbroker-responsibilitiesaservice-broker-responsibilities)
-        - [<a id='registering-dashboard-client'></a>Registering the Dashboard Client](#a-idregistering-dashboard-clientaregistering-the-dashboard-client)
-        - [<a id='dashboard-url'></a>Dashboard URL](#a-iddashboard-urladashboard-url)
-    - [<a id='dashboard-responsibilities'></a>Service Dashboard Responsibilities](#a-iddashboard-responsibilitiesaservice-dashboard-responsibilities)
-        - [<a id='oauth2-flow'></a>OAuth2 Flow](#a-idoauth2-flowaoauth2-flow)
-        - [<a id='checking-user-permissions'></a>Checking User Permissions](#a-idchecking-user-permissionsachecking-user-permissions)
-        - [<a id="on-scopes"></a> On Scopes](#a-idon-scopesa-on-scopes)
-            - [Minimum Scopes](#minimum-scopes)
-            - [Additional Scopes](#additional-scopes)
-    - [<a id='reference-implementation'></a>Reference Implementation](#a-idreference-implementationareference-implementation)
-    - [<a id='restrictions'></a>Restrictions](#a-idrestrictionsarestrictions)
-    - [<a id="resources"></a>Resources](#a-idresourcesaresources)
-- [Examples](#examples)
-    - [Ruby](#ruby)
-    - [Java](#java)
-    - [Go](#go)
-- [Binding Credentials](#binding-credentials)
-- [Application Log Streaming](#application-log-streaming)
-    - [How does it work?](#how-does-it-work)
-- [Route Services](#route-services)
-    - [<a id='introduction'></a>Introduction](#a-idintroductionaintroduction)
-    - [<a id='architecture'></a>Architecture](#a-idarchitectureaarchitecture)
-        - [<a id="fully-brokered"></a>Fully-Brokered Service](#a-idfully-brokeredafully-brokered-service)
-        - [<a id="static-brokered"></a>Static, Brokered Service](#a-idstatic-brokeredastatic-brokered-service)
-        - [<a id="user-provided"></a>User-Provided Service](#a-iduser-providedauser-provided-service)
-        - [<a id="architecture-comparison"></a>Architecture Comparison](#a-idarchitecture-comparisonaarchitecture-comparison)
-    - [<a id='service-instance-responsibilities'></a>Service Instance Responsibilities](#a-idservice-instance-responsibilitiesaservice-instance-responsibilities)
-        - [-](#-)
-        - [<a id='headers'></a>Headers](#a-idheadersaheaders)
-        - [<a id='ssl-certs'></a>SSL Certificates](#a-idssl-certsassl-certificates)
-        - [<a id='timeouts'></a>Timeouts](#a-idtimeoutsatimeouts)
-    - [<a id='broker-responsibilities'></a>Broker Responsibilities](#a-idbroker-responsibilitiesabroker-responsibilities)
-        - [-](#-)
-        - [<a id='binding'></a>Binding Endpoint](#a-idbindingabinding-endpoint)
-    - [<a id='examples'></a>Example Route Services](#a-idexamplesaexample-route-services)
-    - [<a id='tutorial'></a>Tutorial](#a-idtutorialatutorial)
-- [Manage Application Requests with Route Services](#manage-application-requests-with-route-services)
-    - [<a id='bind'></a> Bind a Route to a Service Instance](#a-idbinda-bind-a-route-to-a-service-instance)
-    - [<a id='unbind'></a> Unbind a Route from a Service Instance](#a-idunbinda-unbind-a-route-from-a-service-instance)
-- [Supporting Multiple Cloud Foundry Instances](#supporting-multiple-cloud-foundry-instances)
-    - [Routing & Authentication](#routing--authentication)
-    - [X-Api-Info-Location Header](#x-api-info-location-header)
-- [Volume Services (Experimental)](#volume-services-experimental)
-    - [<a id='introduction'></a>Introduction](#a-idintroductionaintroduction)
-    - [<a id='schema'></a>Schema](#a-idschemaaschema)
-        - [Service Broker Bind Response](#service-broker-bind-response)
-        - [volume_mount](#volumemount)
-        - [shared_device](#shareddevice)
-        - [Example](#example)
-- [Volume Services (Experimental/Obsolete)](#volume-services-experimentalobsolete)
-    - [<a id='introduction'></a>Introduction](#a-idintroductionaintroduction)
-    - [<a id='schema'></a>Schema](#a-idschemaaschema)
-        - [Service Broker Bind Response](#service-broker-bind-response)
-        - [volume_mount](#volumemount)
-        - [private](#private)
-        - [Example](#example)
+<!-- **TODO 'managed services' terminology is different from everywhere else** -->
 
-## Overview
-
-This specification defines an API that provides access to services in
-a generic way that is not tied to a specific platform or cloud
-provider. It is based on the Cloud Foundry API. 
-
-## Notation
-
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
-      NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
-      "OPTIONAL" in this document are to be interpreted as described in
-      [RFC 2119][rfc2119].
-      
-      [rfc2119]: https://tools.ietf.org/html/rfc2119
-      
-## Scope 
-
-client <X> platform <-> broker <X> backend
-
-### In
-
-Communication to a broker.
-
-### Out
-
-Communication to any client in front of a broker or brokers.
-
-Communication from broker to any backend that provisions services.
-
-
-# Index
 
 The documentation in this section is intended for developers and operators interested in creating Managed Services for Cloud Foundry. Managed Services are defined as having been integrated with Cloud Foundry via APIs, and enable end users to provision reserved resources and credentials on demand. For documentation targeted at end users, such as how to provision services and integrate them with applications, see [Services Overview](../devguide/services/index.html).
 
 To develop Managed Services for Cloud Foundry, you'll need a Cloud Foundry instance to test your service broker with as you are developing it. You must have admin access to your CF instance to manage service brokers and the services marketplace catalog. For local development, we recommend using [BOSH Lite](https://github.com/cloudfoundry/bosh-lite) to deploy your own local instance of Cloud Foundry.
 
-## Table of Contents
+**Table of Contents**
 
-* <a href="overview.md" class="subnav">Overview</a>
-* <a href="api.md" class="subnav">Service Broker API</a>
-* <a href="managing-service-brokers.md" class="subnav">Managing Service Brokers</a>
-* <a href="access-control.md" class="subnav">Access Control</a>
-* <a href="catalog-metadata.md" class="subnav">Catalog Metadata</a>
-* <a href="dashboard-sso.md" class="subnav">Dashboard Single Sign-On</a>
-* <a href="examples.md" class="subnav">Example Service Brokers</a>
-* <a href="binding-credentials.md" class="subnav">Binding Credentials</a>
-* <a href="app-log-streaming.md" class="subnav">Application Log Streaming</a>
-* <a href="route-services.md" class="subnav">Route Services</a>
-* <a href="../devguide/services/route-binding.md" class="subnav">Manage Application Requests with Route Services</a>
-* <a href="supporting-multiple-cf-instances.md" class="subnav">Supporting Multiple Cloud Foundry Instances</a>
+- [Overview](#overview)
+- [API](#api)
+- [Managing Service Brokers](#managing-service-brokers)
+- [Access Control](#access-control)
+- [Catalog Metadata](#catalog-metadata)
+- [Dashboard Single Sign-On](#dashboard-single-sign-on)
+- [Examples](#examples)
+- [Binding Credentials](#binding-credentials)
+- [Application Log Streaming](#application-log-streaming)
+- [Route Services](#route-services)
+- [Manage Application Requests with Route Services](#manage-application-requests-with-route-services)
+- [Supporting Multiple Cloud Foundry Instances](#supporting-multiple-cloud-foundry-instances)
+- [Volume Services (Experimental)](#volume-services-experimental)
+- [Volume Services (Experimental/Obsolete)](#volume-services-experimentalobsolete)
 
 # Overview
 
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+      NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+      "OPTIONAL" in this document are to be interpreted as described in
+      [RFC 2119]( https://tools.ietf.org/html/rfc2119)
+
 ## <a id='architecture-terminology'></a>Architecture & Terminology##
+
+<!-- **TODO delete this** -->
+
 
 Services are integrated with Cloud Foundry by implementing a documented API for which the cloud controller is the client; we call this the Service Broker API. This should not be confused with the cloud controller API, often used to refer to the version of Cloud Foundry itself; when one refers to "Cloud Foundry v2" they are referring to the version of the cloud controller API. The services API is versioned independently of the cloud controller API.
 
+<!-- **TODO keep the first sentence, ignore gateway references** -->
+
+
 Service Broker is the term we use to refer to a component of the service which implements the service broker API. This component was formerly referred to as a Service Gateway, however as traffic between applications and services does not flow through the broker we found the term gateway caused confusion. Although gateway still appears in old code, we use the term broker in conversation, in new code, and in documentation.
+
+<!-- **TODO keep paragragh** -->
+
 
 Service brokers advertise a catalog of service offerings and service plans, as well as interpreting calls for provision (create), bind, unbind, and deprovision (delete). What a broker does with each call can vary between services; in general, 'provision' reserves resources on a service and 'bind' delivers information to an application necessary for accessing the resource. We call the reserved resource a Service Instance. What a service instance represents can vary by service; it could be a single database on a multi-tenant server, a dedicated cluster, or even just an account on a web application.
 
@@ -242,7 +54,13 @@ Service brokers advertise a catalog of service offerings and service plans, as w
 
 ## <a id='implementation-deployment'></a>Implementation & Deployment ##
 
+<!-- **TODO keep** -->
+
+
 How a service is implemented is up to the service provider/developer. Cloud Foundry only requires that the service provider implement the service broker API. A broker can be implemented as a separate application, or by adding the required http endpoints to an existing service.
+
+<!-- **TODO TODO delete this** -->
+
 
 Because Cloud Foundry only requires that a service implements the broker API in order to be available to Cloud Foundry end users, many deployment models are possible. The following are examples of valid deployment models.
 
@@ -253,13 +71,27 @@ Because Cloud Foundry only requires that a service implements the broker API in 
 
 # API
 
+<!-- **TODO This section is formatted poorly. The described resources
+need to be listed at the top. The resource needs to be very boldly
+declared at each section. I think the majority of this section would
+better be served by a swagger definition. We should enforce a common
+format for all sections, and move all descriptive text to a higher
+level and link to it from each resource. -->
+
+
 ## <a id='changelog'></a>Document Changelog ##
+
+**TODO we don't need an old changelog. We may want to save the change policy**
+
 
 [v2 API Change Log](v2-api-changelog.md)
 
 ## <a id='changes'></a>Changes ##
 
 ### <a id='change-policy'></a>Change Policy ###
+
+<!-- **TODO keep if we believe in this** -->
+
 
 * Existing endpoints and fields will not be removed or renamed.
 * New optional endpoints, or new HTTP methods for existing endpoints, may be
@@ -270,11 +102,17 @@ that do not understand them.
 
 ### <a id='api-changes-since-v2-8'></a>Changes Since v2.8 ###
 
+<!-- **TODO drop** -->
+
+
 1. Querying `last_operation` now supports `service_id` and `plan_id` query parameters.
 1. Provision, Update, Deprovision responses now accepts an optional `operation` json param for async responses. This is used to by service brokers to return an state related to the operation. Provided back to the service broker via the `last_operation` call.
 1. Querying `last_operation` now supports `operation` param back to the service broker.
 
 ## <a id='dependencies'></a>Dependencies ##
+
+<!-- **TODO delete this** -->
+
 
 v2.9 of the services API has been supported since:
 
@@ -283,6 +121,9 @@ v2.9 of the services API has been supported since:
 * CLI [v6.14.0](https://github.com/cloudfoundry/cli/releases/tag/v6.14.0)
 
 ## <a id='api-overview'></a>API Overview ##
+
+<!-- **TODO keep** -->
+
 
 The Cloud Foundry services API defines the contract between the Cloud
 Controller and the service broker.
@@ -297,6 +138,9 @@ different URL prefixes and credentials.
 
 ## <a id='catalog-mgmt'></a>Catalog Management ##
 
+<!-- **TODO drop. this document never describes what 'validating a catalog' means** -->
+
+
 The first endpoint that a broker must implement is the service catalog.
 Cloud Controller will initially fetch this endpoint from all brokers and make
 adjustments to the user-facing service catalog stored in the Cloud Controller
@@ -307,6 +151,9 @@ message.
 Cloud Controller will also update the catalog whenever a broker is updated, so
 you can use `update-service-broker` with no changes to force a catalog refresh.
 
+<!-- **TODO drop** -->
+
+
 When Cloud Controller fetches a catalog from a broker, it will compare the
 broker's id for services and plans with the `unique_id` values for services and
 plans in the  Cloud Controller database.
@@ -316,6 +163,9 @@ the database.
 If services or plans in the database are found with `unique_id`s that match the
 broker catalog's id, Cloud Controller will update the records to match
 the broker’s catalog.
+
+<!-- **TODO drop** -->
+
 
 If the database has plans which are not found in the broker catalog, and there
 are no associated service instances, Cloud Controller will remove these plans
@@ -354,6 +204,9 @@ no longer be visible in the marketplace catalog or be provisionable.
 </table>
 
 #### Body - Schema of Service Objects ####
+
+<!-- **TODO drop this 'string' definition thing.**  -->
+
 
 CLI and web clients have different needs with regard to service and plan names.
 A CLI-friendly string is all lowercase, with no spaces.
@@ -598,6 +451,9 @@ to make your services and plans available to end users.
 
 ## <a id='asynchronous-operations'></a>Asynchronous Operations ##
 
+<!-- **TODO this should be a separate higher-level section and not shoved inside a resource definition**  -->
+
+
 Previously, Cloud Foundry only supported synchronous integration with service brokers. Brokers must return a valid response within 60 seconds and if the response is `201 CREATED`, users expect a service instance to be usable. This limits the services brokers can offer to those that can be provisioned in 60 seconds; brokers could return a success prematurely, but this leaves users wondering why their service instance is not usable and when it will be.
 
 With support for Asynchronous Operations, brokers still must respond within 60 seconds but may now return a `202 ACCEPTED`, indicating that the requested operation has been accepted but is not complete. This triggers Cloud Foundry to poll a new endpoint `/v2/service_instances/:guid/last_operation` until the broker indicates that the requested operation has succeeded or failed. During the intervening time, end users are able to discover the state of the requested operation using Cloud Foundry API clients such as the CLI.
@@ -633,6 +489,9 @@ The Cloud Controller ensures that service brokers do not receive requests for an
 Service brokers should respond to all Cloud Controller requests within 60 seconds. Brokers that can guarantee completion of the requested operation with the response may return the synchronous response (e.g. `201 CREATED` for a provision request). Brokers that cannot guarantee completion of the operation with the response should implement support for asynchronous provisioning. Support for synchronous or asynchronous responses may vary by service offering, even by service plan.
 
 ## <a id='polling'></a>Polling Last Operation (async only) ##
+
+<!-- **TODO move up to higher-level section**  -->
+
 
 When a broker returns status code `202 ACCEPTED` for [provision](#provisioning), [update](#updating_service_instance), or [deprovision](#deprovisioning), Cloud Foundry will begin to poll the `/v2/service_instances/:guid/last_operation` endpoint to obtain the state of the last requested operation. The broker response must contain the field `state` and an optional field `description`.
 
@@ -701,6 +560,9 @@ $ curl http://username:password@broker-url/v2/service_instances/:instance_id/las
 </tr>
 </tbody>
 </table>
+
+<!-- **TODO this response definition needs to be moved up to a top level section and referenced.**  -->
+
 
 Responses with any other status code will be interpreted as an error or invalid response; Cloud Foundry will continue polling until the broker returns a valid response or the [maximum polling duration](#max-polling-duration) is reached. Brokers may use the `description` field to expose user-facing error messages about the operation state; for more info see [Broker Errors](api.md#broker-errors).
 
@@ -1094,6 +956,9 @@ For success responses, the following fields are supported. Others will be ignore
 
 ## <a id='binding'></a>Binding ##
 
+<!-- **TODO this note should not be hidden down in the binding definition.**  -->
+
+
 <p class="note"><strong>Note</strong>: Not all services must be bindable --- some deliver value just from being provisioned. Brokers that offer services that are bindable should declare them as such using <code>bindable: true</code> in the <a href="#catalog-mgmt">Catalog</a>. Brokers that do not offer any bindable services do not need to implement the endpoint for bind requests.</p>
 
 ### <a id='binding-types'></a>Types of Binding ###
@@ -1108,9 +973,15 @@ In response to a bind request for an application (`app_id` included), a broker m
 
 #### <a id='binding-route-services'></a>Route Services ####
 
+<!-- **TODO drop**  -->
+
+
 If a broker has declared `"requires":["route_forwarding"]` for a service in the Catalog endpoint, Cloud Foundry will permit a user to bind a service to a route. When bound to a route, the route itself will be sent with the bind request. A route is an address used by clients to reach apps mapped to the route. In response a broker may return a `route_service_url` which Cloud Foundry will use to proxy any request for the route to the service instance at URL specified by `route_service_url`. A broker may declare `"requires":["route_forwarding"]` but not return `route_service_url`; this enables a broker to dynamically configure a network component already in the request path for the route, requiring no change in the Cloud Foundry router. For more information, see [Route Services](route-services.md).
 
 #### <a id='binding-volume-services'></a>Volume Services (Experimental)####
+
+<!-- **TODO maybe move volume support to a higher level and provide a link here** -->
+
 
 If a broker has declared `"requires":["volume_mount"]` for a service in the Catalog endpoint, Cloud Foundry will permit a user to bind one or more volumes to an application.  In response to a bind request a volume service broker should return a set of `volume_mount` instructions that Cloud Foundry will ensure are mounted into the application's containers.  For more information, see [Volume Services](volume-services.md)
 
@@ -1501,7 +1372,57 @@ For success responses, the following fields are supported. Others will be ignore
 }
 </pre>
 
+
+## <a id='broker-errors'></a>Broker Errors ##
+
+<!-- **TODO not sure how I missed this section initially. it's good as a top level section. keep it. I don't think we need all the exposition around when we link here.** -->
+
+
+### Response ###
+
+Broker failures beyond the scope of the well-defined HTTP response codes listed
+above (like 410 on delete) should return an appropriate HTTP response code
+(chosen to accurately reflect the nature of the failure) and a body containing a valid JSON Object (not an array).
+
+##### Body #####
+
+<!-- **TODO I think this is confusing. Are we trying to say it shouldn't be -->
+
+an array? Or that it shoudn't have an empty body? We don't use any of
+the empty body status codes in this API, but what if we did?**
+
+All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
+
+For error responses, the following fields are valid. Others will be ignored. If an empty JSON object is returned in the body `{}`, a generic message containing the HTTP response code returned by the broker will be displayed to the requestor.
+
+<table border="1" class="nice">
+<thead>
+<tr>
+  <th>Response Field</th>
+  <th>Type</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>description</td>
+  <td>string</td>
+  <td>An error message explaining why the request failed. This message will be displayed to the user who initiated the request.
+</td>
+</tr>
+</tbody>
+</table>
+
+<pre class="terminal">
+{
+  "description": "Something went wrong. Please contact support at http://support.example.com."
+}
+</pre>
+
 ## <a id='orphans'></a>Orphans ##
+
+<!-- **TODO drop** -->
+
 
 The Cloud Controller is the source of truth for service instances and bindings. Service brokers are expected to have successfully provisioned all the instances and bindings Cloud Controller knows about, and none that it doesn't.
 
@@ -1573,6 +1494,9 @@ If the Cloud Controller encounters an internal error provisioning an instance or
 This orphan mitigation behavior was introduced in cf-release v196.
 
 # Managing Service Brokers
+
+<!-- **TODO drop this whole toplevel section. possibly reformat into a 'recommended best practices section'.** -->
+
 
 This page assumes you are using cf CLI v6.16 or later.
 
@@ -1667,15 +1591,17 @@ has no relation to configuration of the broker itself.
 $ cf rename-service-broker mybrokername mynewbrokername
 </pre>
 
+
+
 ## <a id='remove-broker'></a>Remove a Broker ##
 
 Removing a service broker will remove all services and plans in the broker's catalog from the Cloud Foundry Marketplace.
 
-<pre class="terminal">
+```
 $ cf delete-service-broker mybrokername
-</pre>
+```
 
-<p class="note"><strong>Note</strong>: Attempting to remove a service broker will fail if there are service instances for any service plan in its catalog. When planning to shut down or delete a broker, make sure to remove all service instances first. Failure to do so will leave <a href="api.md#orphans">orphaned service instances</a> in the Cloud Foundry database. If a service broker has been shut down without first deleting service instances, you can remove the instances with the CLI; see <a href="#purge-service">Purge a Service</a>.
+**Note**: Attempting to remove a service broker will fail if there are service instances for any service plan in its catalog. When planning to shut down or delete a broker, make sure to remove all service instances first. Failure to do so will leave orphaned service instances in the Cloud Foundry database. If a service broker has been shut down without first deleting service instances, you can remove the instances with the CLI; see [Purge a Service](#purge-a-service).
 
 ### <a id='purge-service'></a>Purge a Service ###
 
@@ -1697,6 +1623,7 @@ delete-service-auth-token or delete-service-broker to complete the cleanup.
 Really purge service offering v1-test from Cloud Foundry? y
 OK
 </pre>
+
 
 ### <a id='purge-service-instance'></a>Purge a Service Instance###
 
@@ -1759,6 +1686,9 @@ Service service-name-1
 </pre>
 
 # Access Control
+
+<!-- **TODO drop this entire toplevel section. unconditionally. nothing of relevancy here.** -->
+
 
 All new service plans from standard private brokers are private by default. This means that when adding a new broker, or when adding a new plan to an existing broker's catalog, service plans won't immediately be available to end users. This lets an admin control which service plans are available to end users, and manage limited service availability.
 
@@ -2098,6 +2028,9 @@ $ cf curl /v2/service_plan_visibilities/99993789-a368-483e-ae7c-ebe79e199999 -X 
 
 # Catalog Metadata
 
+<!-- **TODO This can be a subsection of the API section. Cost needs to be standardized if we care.** -->
+
+
 The Services Marketplace is defined as the aggregate catalog of services and plans exposed to end users of a Cloud Foundry instance. Marketplace services may come from one or many service brokers. The Marketplace is exposed to end users by cloud controller clients (web, CLI, IDEs, etc), and the Cloud Foundry community is welcome to develop their own clients. All clients are not expected to have the same requirements for information to expose about services and plans. This document discusses user-facing metadata for services and plans, and how the broker API enables broker authors to provide metadata required by different cloud controller clients.
 
 As described in the [Service Broker API](api.md#catalog-mgmt), the only required user-facing fields are `label` and `description` for services, and `name` and `description` for service plans. Rather than attempt to anticipate all potential fields that clients will want, or add endless fields to the API spec over time, the broker API provides a mechanism for brokers to advertise any fields a client requires. This mechanism is the `metadata` field.
@@ -2133,7 +2066,7 @@ command.</p>
 
 | Broker API Field | Type | Description | CC API Field | Pivotal CLI | Pivotal Apps Manager |
 |------------------|------|-------------|--------------|-------------|---------------------------|
-| name | CLI string | A short name for the service plan to be displayed in a catalog. | name | X | |
+d| name | CLI string | A short name for the service plan to be displayed in a catalog. | name | X | |
 | description | string | A description of the service plan to be displayed in a catalog. | description | | |
 | metadata.bullets | array-of-strings | Features of this plan, to be displayed in a bulleted-list | extra.bullets | | X |
 | metadata.costs | cost object | An array-of-objects that describes the costs of a service, in what currency, and the unit of measure. If there are multiple costs, all of them could be billed to the user (such as a monthly + usage costs at once).  Each object must provide the following keys:<br/>`amount: { usd: float }, unit: string `<br/>This indicates the cost in USD of the service plan, and how frequently the cost is occurred, such as "MONTHLY" or "per 1000 messages". | extra.costs | | X |
@@ -2205,6 +2138,9 @@ The example below contains a catalog of one service, having one service plan. Of
 ```
 
 ## <a id='example-cc-response'></a>Example Cloud Controller Response Body ##
+
+<!-- **TODO I don't think we need the response example. What is it trying to show?** -->
+
 
 ```
 {
@@ -2286,6 +2222,8 @@ The example below contains a catalog of one service, having one service plan. Of
 
 
 # Dashboard Single Sign-On
+
+<!-- **TODO Are we supporting this at all?** -->
 
 
 ## <a id='introduction'></a>Introduction ##
@@ -2448,6 +2386,9 @@ The UAA OmniAuth strategy is used to first get an authorization code, as documen
 
 # Examples
 
+<!-- **TODO keep. move to the end?** -->
+
+
 The following example service broker applications have been developed - these are a great starting point if you are developing your own service broker.
 
 ## Ruby
@@ -2465,6 +2406,11 @@ The following example service broker applications have been developed - these ar
 * [Asynchronous Service Broker for AWS EC2](https://github.com/cloudfoundry-samples/go_service_broker) - This broker implements support for the experimental [Asynchronous Service Operations](./api.html#asynchronous-operations), and calls AWS APIs to provision EC2 VMs.
 
 # Binding Credentials
+
+<!-- **TODO we can't call this thing vcap_services without an explanation of -->
+
+what vcap means. it's not clear where this is returned from. should
+pick either a combined uri, or individual fields, not both.**
 
 A bindable service returns credentials that an application can consume in response to the `cf bind` API call.
 Cloud Foundry writes these credentials to the [`VCAP_SERVICES`](../devguide/deploy-apps/environment-variable.html#VCAP-SERVICES) environment variable.
@@ -2573,6 +2519,11 @@ VCAP_SERVICES=
 
 # Application Log Streaming
 
+<!-- **TODO are we going to support this? seems overly specialized. seems -->
+
+like it should be just additional credentials on the same service
+binding.**
+
 By binding an application to an instance of an applicable service, Cloud Foundry will stream logs for the bound application to the service instance.
 
 - Logs for all apps bound to a log-consuming service instance will be streamed to that instance
@@ -2596,6 +2547,9 @@ To enable this functionality, a service broker must implement the following:
 Users can manually configure app logs to be streamed to a location of their choice using User-provided Service Instances. For details, see [Using Third-Party Log Management Services](../devguide/services/log-management.html).
 
 # Route Services
+
+<!-- **TODO very cf specific ** -->
+
 
 This documentation is intended for service authors who are interested in offering a service to a Cloud Foundry services marketplace. Developers interested in consuming these services can read the  [Manage Application Requests with Route Services](../devguide/services/route-binding.md) topic.
 
@@ -2790,6 +2744,9 @@ Requires CLI version 6.16 or above.
 
 # Manage Application Requests with Route Services
 
+<!-- **TODO again cf specific. drop.**  -->
+
+
 This topic describes how to bind a service instance to a route for the purpose of adding preprocessing to application requests.
 
 Route services are a class of [marketplace services](../services/managing-services.html) that perform filtering or content transformation on application requests and responses. This helps to remove the burden on developers who would otherwise have to implement these functions themselves. Popular use cases for route services include rate limiting, authorization, and caching. A route service may reject requests or after some transformation pass the request on to applications.
@@ -2845,6 +2802,9 @@ OK
 
 # Supporting Multiple Cloud Foundry Instances
 
+<!-- **TODO the concept is sound, but I'm not sure how it generalizes.** -->
+
+
 It is possible to register a service broker with multiple Cloud Foundry instances. It may be necessary for the broker to know which Cloud Foundry instance is making a given request. For example, when using [Dashboard Single Sign-On](dashboard-sso.html), the broker is expected to interact with the authorization and token endpoints for a given Cloud Foundry instance.
 
 There are two strategies that can be used to discover which Cloud Foundry instance is making a given request.
@@ -2862,6 +2822,11 @@ All calls to the broker from Cloud Foundry include an `X-Api-Info-Location` head
 Support for this header was introduced in cf-release v212.
 
 # Volume Services (Experimental)
+
+<!-- **TODO cf experimental. drop or keep? seems to be a way of providing -->
+
+access to a service where you provide a file interface instead of a
+url**
 
 ## <a id='introduction'></a>Introduction ##
 
@@ -2974,7 +2939,10 @@ A `shared_device` is a subtype of a device. It represents a distributed file sys
 }
 </pre>
 
-# Volume Services (Experimental/Obsolete)
+# Volume Services (Experimental/Obsolete) #
+
+<!-- **TODO obsolete version of an experimental extension. definitely drop.** -->
+
 
 ## <a id='introduction'></a>Introduction ##
 
