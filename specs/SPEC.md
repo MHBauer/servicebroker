@@ -28,15 +28,7 @@ To develop Managed Services for Cloud Foundry, you'll need a Cloud Foundry insta
 
 # Overview
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
-      NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
-      "OPTIONAL" in this document are to be interpreted as described in
-      [RFC 2119]( https://tools.ietf.org/html/rfc2119).
-
-## <a id='architecture-terminology'></a>Architecture & Terminology##
-
 <!-- **TODO delete this** -->
-
 
 Services are integrated with Cloud Foundry by implementing a documented API for which the cloud controller is the client; we call this the Service Broker API. This should not be confused with the cloud controller API, often used to refer to the version of Cloud Foundry itself; when one refers to "Cloud Foundry v2" they are referring to the version of the cloud controller API. The services API is versioned independently of the cloud controller API.
 
@@ -51,6 +43,13 @@ Service Broker is the term we use to refer to a component of the service which i
 Service brokers advertise a catalog of service offerings and service plans, as well as interpreting calls for provision (create), bind, unbind, and deprovision (delete). What a broker does with each call can vary between services; in general, 'provision' reserves resources on a service and 'bind' delivers information to an application necessary for accessing the resource. We call the reserved resource a Service Instance. What a service instance represents can vary by service; it could be a single database on a multi-tenant server, a dedicated cluster, or even just an account on a web application.
 
 <image src="images/managed-services.png">
+
+## Terminology
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+      NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+      "OPTIONAL" in this document are to be interpreted as described in
+      [RFC 2119]( https://tools.ietf.org/html/rfc2119).
 
 ## <a id='implementation-deployment'></a>Implementation & Deployment ##
 
