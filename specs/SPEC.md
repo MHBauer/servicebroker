@@ -1384,10 +1384,9 @@ above (like 410 on delete) should return an appropriate HTTP response code
 
 ##### Body #####
 
-<!-- **TODO I think this is confusing. Are we trying to say it shouldn't be -->
-
+<!-- **TODO I think this is confusing. Are we trying to say it shouldn't be
 an array? Or that it shoudn't have an empty body? We don't use any of
-the empty body status codes in this API, but what if we did?**
+the empty body status codes in this API, but what if we did?** -->
 
 All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
 
@@ -2519,10 +2518,9 @@ The UAA OmniAuth strategy is used to first get an authorization code, as documen
 
 # Application Log Streaming
 
-<!-- **TODO are we going to support this? seems overly specialized. seems -->
-
+<!-- **TODO are we going to support this? seems overly specialized. seems 
 like it should be just additional credentials on the same service
-binding.**
+binding.** -->
 
 By binding an application to an instance of an applicable service, Cloud Foundry will stream logs for the bound application to the service instance.
 
