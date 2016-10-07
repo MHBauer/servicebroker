@@ -13,19 +13,19 @@ To develop Managed Services for Cloud Foundry, you'll need a Cloud Foundry insta
 
 - [Overview](#overview)
 - [API](#api)
+- [Catalog Metadata](#catalog-metadata)
+- [Binding Credentials](#binding-credentials)
+- [Examples](#examples)
 - [Managing Service Brokers](#managing-service-brokers)
 - [Access Control](#access-control)
-- [Catalog Metadata](#catalog-metadata)
 - [Dashboard Single Sign-On](#dashboard-single-sign-on)
-- [Examples](#examples)
-- [Binding Credentials](#binding-credentials)
 - [Application Log Streaming](#application-log-streaming)
 - [Route Services](#route-services)
 - [Manage Application Requests with Route Services](#manage-application-requests-with-route-services)
 - [Supporting Multiple Cloud Foundry Instances](#supporting-multiple-cloud-foundry-instances)
 - [Volume Services (Experimental)](#volume-services-experimental)
 - [Volume Services (Experimental/Obsolete)](#volume-services-experimentalobsolete)
-
+  
 # Overview
 
 <!-- **TODO delete this** -->
@@ -957,12 +957,11 @@ For success responses, the following fields are supported. Others will be ignore
 
 <!-- **TODO this note should not be hidden down in the binding definition.**  -->
 
-
 <p class="note"><strong>Note</strong>: Not all services must be bindable --- some deliver value just from being provisioned. Brokers that offer services that are bindable should declare them as such using <code>bindable: true</code> in the <a href="#catalog-mgmt">Catalog</a>. Brokers that do not offer any bindable services do not need to implement the endpoint for bind requests.</p>
 
 ### <a id='binding-types'></a>Types of Binding ###
 
-#### <a id='binding-credentials'></a>Credentials ####
+#### Credentials ####
 
 Credentials are a set of information used by an application or a user to utilize the service instance. If `bindable:true` is declared for a service in the catalog endpoint, users may request generation of credentials either by binding the service instance to an application or by creating a service key. When a service instance is bound to an app, Cloud Foundry will send the app id with the request. When a service key is created, the app id is not included. If the broker supports generation of credentials it should return `credentials` in the response. Credentials should be unique whenever possible, so access can be revoked for one application or user without affecting another. For more information on credentials, see [Binding Credentials](binding-credentials.md).
 
@@ -1491,6 +1490,336 @@ More specifically, when a provision or bind request to the broker fails, Cloud C
 If the Cloud Controller encounters an internal error provisioning an instance or binding (for example, saving to the database fails), then the Cloud Controller will send a single delete or unbind request to the broker but will not retry.
 
 This orphan mitigation behavior was introduced in cf-release v196.
+
+# Catalog Metadata #
+
+<!-- **TODO This can be a subsection of the API section. Cost needs to be standardized if we care.** -->
+
+
+The Services Marketplace is defined as the aggregate catalog of services and plans exposed to end users of a Cloud Foundry instance. Marketplace services may come from one or many service brokers. The Marketplace is exposed to end users by cloud controller clients (web, CLI, IDEs, etc), and the Cloud Foundry community is welcome to develop their own clients. All clients are not expected to have the same requirements for information to expose about services and plans. This document discusses user-facing metadata for services and plans, and how the broker API enables broker authors to provide metadata required by different cloud controller clients.
+
+As described in the [Service Broker API](api.md#catalog-mgmt), the only required user-facing fields are `label` and `description` for services, and `name` and `description` for service plans. Rather than attempt to anticipate all potential fields that clients will want, or add endless fields to the API spec over time, the broker API provides a mechanism for brokers to advertise any fields a client requires. This mechanism is the `metadata` field.
+
+The contents of the `metadata` field are not validated by cloud controller but may be by cloud controller clients. Not all clients will make use of the value of `metadata`, and not all brokers have to provide it. If a broker does advertise the `metadata` field, client developers can choose to display some or all fields available.
+
+<p class="note"><strong>Note</strong>: In the <a href="api-v1.md">v1 broker API</a>, the <code>metadata</code> field was called <code>extra</code>.</p>
+
+## <a id='community-driven-standards'></a>Community-Driven Standards ##
+
+This page provides a place to publish the metadata fields required by popular cloud controller clients. Client authors can add their metadata requirements to this document, so that broker authors can see what metadata they should advertise in their catalogs.
+
+**Before adding new fields, consider whether an existing one will suffice.**
+
+<p class="note"><strong>Note</strong>: "CLI strings" are all lowercase, no spaces.
+Keep it short; imagine someone having to type it as an argument for a longer CLI
+command.</p>
+
+## <a id='services-metadata-fields'></a>Services Metadata Fields ##
+
+| Broker API Field | Type | Description | CC API Field | Pivotal CLI | Pivotal Apps Manager |
+|------------------|------|-------------|--------------|-------------|---------------------------|
+| name | CLI string | A short name for the service to be displayed in a catalog. | label | X | X |
+| description | string | A short 1-line description for the service, usually a single sentence or phrase. | description | X | X |
+| metadata.displayName | string | The name of the service to be displayed in graphical clients | extra.displayName | | X |
+| metadata.imageUrl | string | The URL to an image. | extra.imageUrl | | X |
+| metadata.longDescription | string | Long description | extra.longDescription | | X |
+| metadata.providerDisplayName | string | The name of the upstream entity providing the actual service | extra.providerDisplayName | | X |
+| metadata.documentationUrl | string | Link to documentation page for service | extra.documentationUrl | | X |
+| metadata.supportUrl | string | Link to support for the service | extra.supportUrl | | X |
+
+## <a id='plan-metadata-fields'></a>Plan Metadata Fields ##
+
+| Broker API Field | Type | Description | CC API Field | Pivotal CLI | Pivotal Apps Manager |
+|------------------|------|-------------|--------------|-------------|---------------------------|
+d| name | CLI string | A short name for the service plan to be displayed in a catalog. | name | X | |
+| description | string | A description of the service plan to be displayed in a catalog. | description | | |
+| metadata.bullets | array-of-strings | Features of this plan, to be displayed in a bulleted-list | extra.bullets | | X |
+| metadata.costs | cost object | An array-of-objects that describes the costs of a service, in what currency, and the unit of measure. If there are multiple costs, all of them could be billed to the user (such as a monthly + usage costs at once).  Each object must provide the following keys:<br/>`amount: { usd: float }, unit: string `<br/>This indicates the cost in USD of the service plan, and how frequently the cost is occurred, such as "MONTHLY" or "per 1000 messages". | extra.costs | | X |
+| metadata.displayName | string | Name of the plan to be display in graphical clients. | extra.displayName | | X |
+
+## <a id='example-broker-response'></a>Example Broker Response Body ##
+
+The example below contains a catalog of one service, having one service plan. Of course, a broker can offering a catalog of many services, each having many plans.
+
+```
+{
+   "services":[
+      {
+      "id":"766fa866-a950-4b12-adff-c11fa4cf8fdc",
+         "name":"cloudamqp",
+         "description":"Managed HA RabbitMQ servers in the cloud",
+         "requires":[
+
+         ],
+         "tags":[
+            "amqp",
+            "rabbitmq",
+            "messaging"
+         ],
+         "metadata":{
+            "displayName":"CloudAMQP",
+            "imageUrl":"https://d33na3ni6eqf5j.cloudfront.net/app_resources/18492/thumbs_112/img9069612145282015279.png",
+            "longDescription":"Managed, highly available, RabbitMQ clusters in the cloud",
+            "providerDisplayName":"84codes AB",
+            "documentationUrl":"http://docs.cloudfoundry.com/docs/dotcom/marketplace/services/cloudamqp.html",
+            "supportUrl":"http://www.cloudamqp.com/support.html"
+         },
+         "dashboard_client":{
+            "id": "p-mysql-client",
+            "secret": "p-mysql-secret",
+            "redirect_uri": "http://p-mysql.example.com/auth/create"
+         },
+         "plans":[
+            {
+               "id":"024f3452-67f8-40bc-a724-a20c4ea24b1c",
+               "name":"bunny",
+               "description":"A mid-sided plan",
+               "metadata":{
+                  "bullets":[
+                     "20 GB of messages",
+                     "20 connections"
+                  ],
+                  "costs":[
+                     {
+                        "amount":{
+                           "usd":99.0
+                        },
+                        "unit":"MONTHLY"
+                     },
+                     {
+                        "amount":{
+                           "usd":0.99
+                        },
+                        "unit":"1GB of messages over 20GB"
+                     }
+                  ],
+                  "displayName":"Big Bunny"
+               }
+            }
+         ]
+      }
+   ]
+}
+```
+
+## <a id='example-cc-response'></a>Example Cloud Controller Response Body ##
+
+<!-- **TODO I don't think we need the response example. What is it trying to show?** -->
+
+
+```
+{
+   "metadata":{
+      "guid":"bc8748f1-fe05-444d-ab7e-9798e1f9aef6",
+      "url":"/v2/services/bc8748f1-fe05-444d-ab7e-9798e1f9aef6",
+      "created_at":"2014-01-08T18:52:16+00:00",
+      "updated_at":"2014-01-09T03:19:16+00:00"
+   },
+   "entity":{
+      "label":"cloudamqp",
+      "provider":"cloudamqp",
+      "url":"http://adgw.a1.cf-app.example.com",
+      "description":"Managed HA RabbitMQ servers in the cloud",
+      "long_description":null,
+      "version":"n/a",
+      "info_url":null,
+      "active":true,
+      "bindable":true,
+      "unique_id":"18723",
+      "extra":{
+         "displayName":"CloudAMQP",
+         "imageUrl":"https://d33na3ni6eqf5j.cloudfront.net/app_resources/18723/thumbs_112/img9069612145282015279.png",
+         "longDescription":"Managed, highly available, RabbitMQ clusters in the cloud",
+         "providerDisplayName":"84codesAB",
+         "documentationUrl":null,
+         "supportUrl":null
+      },
+      "tags":[
+         "amqp",
+         "rabbitmq"
+      ],
+      "requires":[
+
+      ],
+      "documentation_url":null,
+      "service_plans":[
+         {
+            "metadata":{
+               "guid":"6c4903ab-14ce-41de-adb2-632cf06117a5",
+               "url":"/v2/services/6c4903ab-14ce-41de-adb2-632cf06117a5",
+               "created_at":"2013-11-01T00:21:25+00:00",
+               "updated_at":"2014-01-09T03:19:16+00:00"
+            },
+            "entity":{
+               "name":"bunny",
+               "free":true,
+               "description":"Big Bunny",
+               "service_guid":"bc8748f1-fe05-444d-ab7e-9798e1f9aef6",
+               "extra":{
+                  "bullets":[
+                     "20 GB of messages",
+                     "20 connections"
+                  ],
+                  "costs":[
+                     {
+                        "amount":{
+                           "usd":99.0
+                        },
+                        "unit":"MONTHLY"
+                     },
+                     {
+                        "amount":{
+                           "usd":0.99
+                        },
+                        "unit":"1GB of messages over 20GB"
+                     }
+                  ],
+                  "displayName":"Big Bunny"
+               },
+               "unique_id":"addonOffering_1889",
+               "public":true
+            }
+         }
+      ]
+   }
+}
+```
+
+
+
+# Binding Credentials
+
+<!-- **TODO we can't call this thing vcap_services without an explanation of 
+what vcap means. it's not clear where this is returned from. should
+pick either a combined uri, or individual fields, not both.**-->
+
+A bindable service returns credentials that an application can consume in response to the `cf bind` API call.
+Cloud Foundry writes these credentials to the [`VCAP_SERVICES`](../devguide/deploy-apps/environment-variable.html#VCAP-SERVICES) environment variable.
+In some cases, buildpacks write a subset of these credentials to other
+environment variables that frameworks might need.
+
+Choose from the following list of credential fields if possible, though you can provide additional fields as needed.
+Refer to the [Using Bound Services](../devguide/services/managing-services.html#use) section of the
+_Managing Service Instances with the CLI_ topic for information on how these
+credentials are consumed.
+
+<p class='note'><strong>Note</strong>: If you provide a service that supports a connection string, provide the <code>uri</code> key for buildpacks and
+application libraries to use.</p>
+
+<table border="1" class="nice">
+  <tr>
+    <th><strong>CREDENTIALS</strong></th>
+    <th><strong>DESCRIPTION</strong></th>
+  </tr>
+  <tr>
+    <td>uri</td>
+    <td>Connection string of the form <code>DB-TYPE://USERNAME:PASSWORD@HOSTNAME:PORT/NAME</code>,
+    where <code>DB-TYPE</code> is a type of database such as mysql, postgres, mongodb, or amqp.</td>
+  </tr>
+  <tr>
+    <td>hostname</td>
+    <td>FQDN of the server host</td>
+  </tr>
+  <tr>
+    <td>port</td>
+    <td>Port of the server host</td>
+  </tr>
+  <tr>
+    <td>name</td>
+    <td>Name of the service instance</td>
+  </tr>
+  <tr>
+    <td>vhost</td>
+    <td>Name of the messaging server virtual host - a replacement for a <code>name</code> specific to AMQP providers</td>
+  </tr>
+  <tr>
+    <td>username</td>
+    <td>Server user</td>
+  </tr>
+  <tr>
+    <td>password</td>
+    <td>Server password</td>
+  </tr>
+</table>
+
+The following is an example output of `ENV['VCAP_SERVICES']`.
+
+<p class='note'><strong>Note</strong>: Depending on the types of databases you are using, each database might return different credentials.</p>
+
+<pre>
+VCAP_SERVICES=
+{
+  cleardb: [
+    {
+      name: "cleardb-1",
+      label: "cleardb",
+      plan: "spark",
+      credentials: {
+        name: "ad_c6f4446532610ab",
+        hostname: "us-cdbr-east-03.cleardb.com",
+        port: "3306",
+        username: "b5d435f40dd2b2",
+        password: "ebfc00ac",
+        uri: "mysql://b5d435f40dd2b2:ebfc00ac@us-cdbr-east-03.cleardb.com:3306/ad_c6f4446532610ab",
+        jdbcUrl: "jdbc:mysql://b5d435f40dd2b2:ebfc00ac@us-cdbr-east-03.cleardb.com:3306/ad_c6f4446532610ab"
+      }
+    }
+  ],
+  cloudamqp: [
+    {
+      name: "cloudamqp-6",
+      label: "cloudamqp",
+      plan: "lemur",
+      credentials: {
+        uri: "amqp://ksvyjmiv:IwN6dCdZmeQD4O0ZPKpu1YOaLx1he8wo@lemur.cloudamqp.com/ksvyjmiv"
+      }
+    }
+    {
+      name: "cloudamqp-9dbc6",
+      label: "cloudamqp",
+      plan: "lemur",
+      credentials: {
+        uri: "amqp://vhuklnxa:9lNFxpTuJsAdTts98vQIdKHW3MojyMyV@lemur.cloudamqp.com/vhuklnxa"
+      }
+    }
+  ],
+  rediscloud: [
+    {
+      name: "rediscloud-1",
+      label: "rediscloud",
+      plan: "20mb",
+      credentials: {
+        port: "6379",
+        host: "pub-redis-6379.us-east-1-2.3.ec2.redislabs.com",
+        password: "1M5zd3QfWi9nUyya"
+      }
+    },
+  ],
+}
+</pre>
+
+# Examples
+
+<!-- **TODO keep. move to the end?** -->
+
+
+The following example service broker applications have been developed - these are a great starting point if you are developing your own service broker.
+
+## Ruby
+
+* [GitHub repo service](https://github.com/cloudfoundry-samples/github-service-broker-ruby) - this is designed to be an easy-to-read example of a service broker, with complete documentation, and comes with a demo app that uses the service. The broker can be deployed as an application to any Cloud Foundry instance or hosted elsewhere. The service broker uses GitHub as the service back end.
+* [MySQL database service](https://github.com/cloudfoundry/cf-mysql-release) - this broker and its accompanying MySQL server are designed to be deployed together as a [BOSH](https://github.com/cloudfoundry/bosh) release. BOSH is used to deploy or upgrade the release, monitors the health of running components, and restarts or recreates unhealthy VMs. The broker code alone can be found [here](https://github.com/cloudfoundry/cf-mysql-broker).
+
+## Java
+
+* [Spring Cloud - Cloud Foundry Service Broker](https://github.com/spring-cloud/spring-cloud-cloudfoundry-service-broker) - This implements the REST contract for service brokers and the artifacts are published to the spring maven repo.  This greatly simplifies development: include a single dependency in Gradle, implement interfaces, and configure. A sample implementation has been provided for [MongoDB](https://github.com/spring-cloud-samples/cloudfoundry-service-broker).
+* [MySQL Java Broker](https://github.com/cloudfoundry-community/cf-mysql-java-broker) - a Java port of the Ruby-based [MySQL broker](https://github.com/cloudfoundry/cf-mysql-broker) above.
+
+## Go
+
+* [Asynchronous Service Broker for AWS EC2](https://github.com/cloudfoundry-samples/go_service_broker) - This broker implements support for the experimental [Asynchronous Service Operations](./api.html#asynchronous-operations), and calls AWS APIs to provision EC2 VMs.
+
+
 
 # Managing Service Brokers
 
@@ -2025,201 +2354,6 @@ Example:
 $ cf curl /v2/service_plan_visibilities/99993789-a368-483e-ae7c-ebe79e199999 -X DELETE
 </pre>
 
-# Catalog Metadata
-
-<!-- **TODO This can be a subsection of the API section. Cost needs to be standardized if we care.** -->
-
-
-The Services Marketplace is defined as the aggregate catalog of services and plans exposed to end users of a Cloud Foundry instance. Marketplace services may come from one or many service brokers. The Marketplace is exposed to end users by cloud controller clients (web, CLI, IDEs, etc), and the Cloud Foundry community is welcome to develop their own clients. All clients are not expected to have the same requirements for information to expose about services and plans. This document discusses user-facing metadata for services and plans, and how the broker API enables broker authors to provide metadata required by different cloud controller clients.
-
-As described in the [Service Broker API](api.md#catalog-mgmt), the only required user-facing fields are `label` and `description` for services, and `name` and `description` for service plans. Rather than attempt to anticipate all potential fields that clients will want, or add endless fields to the API spec over time, the broker API provides a mechanism for brokers to advertise any fields a client requires. This mechanism is the `metadata` field.
-
-The contents of the `metadata` field are not validated by cloud controller but may be by cloud controller clients. Not all clients will make use of the value of `metadata`, and not all brokers have to provide it. If a broker does advertise the `metadata` field, client developers can choose to display some or all fields available.
-
-<p class="note"><strong>Note</strong>: In the <a href="api-v1.md">v1 broker API</a>, the <code>metadata</code> field was called <code>extra</code>.</p>
-
-## <a id='community-driven-standards'></a>Community-Driven Standards ##
-
-This page provides a place to publish the metadata fields required by popular cloud controller clients. Client authors can add their metadata requirements to this document, so that broker authors can see what metadata they should advertise in their catalogs.
-
-**Before adding new fields, consider whether an existing one will suffice.**
-
-<p class="note"><strong>Note</strong>: "CLI strings" are all lowercase, no spaces.
-Keep it short; imagine someone having to type it as an argument for a longer CLI
-command.</p>
-
-## <a id='services-metadata-fields'></a>Services Metadata Fields ##
-
-| Broker API Field | Type | Description | CC API Field | Pivotal CLI | Pivotal Apps Manager |
-|------------------|------|-------------|--------------|-------------|---------------------------|
-| name | CLI string | A short name for the service to be displayed in a catalog. | label | X | X |
-| description | string | A short 1-line description for the service, usually a single sentence or phrase. | description | X | X |
-| metadata.displayName | string | The name of the service to be displayed in graphical clients | extra.displayName | | X |
-| metadata.imageUrl | string | The URL to an image. | extra.imageUrl | | X |
-| metadata.longDescription | string | Long description | extra.longDescription | | X |
-| metadata.providerDisplayName | string | The name of the upstream entity providing the actual service | extra.providerDisplayName | | X |
-| metadata.documentationUrl | string | Link to documentation page for service | extra.documentationUrl | | X |
-| metadata.supportUrl | string | Link to support for the service | extra.supportUrl | | X |
-
-## <a id='plan-metadata-fields'></a>Plan Metadata Fields ##
-
-| Broker API Field | Type | Description | CC API Field | Pivotal CLI | Pivotal Apps Manager |
-|------------------|------|-------------|--------------|-------------|---------------------------|
-d| name | CLI string | A short name for the service plan to be displayed in a catalog. | name | X | |
-| description | string | A description of the service plan to be displayed in a catalog. | description | | |
-| metadata.bullets | array-of-strings | Features of this plan, to be displayed in a bulleted-list | extra.bullets | | X |
-| metadata.costs | cost object | An array-of-objects that describes the costs of a service, in what currency, and the unit of measure. If there are multiple costs, all of them could be billed to the user (such as a monthly + usage costs at once).  Each object must provide the following keys:<br/>`amount: { usd: float }, unit: string `<br/>This indicates the cost in USD of the service plan, and how frequently the cost is occurred, such as "MONTHLY" or "per 1000 messages". | extra.costs | | X |
-| metadata.displayName | string | Name of the plan to be display in graphical clients. | extra.displayName | | X |
-
-## <a id='example-broker-response'></a>Example Broker Response Body ##
-
-The example below contains a catalog of one service, having one service plan. Of course, a broker can offering a catalog of many services, each having many plans.
-
-```
-{
-   "services":[
-      {
-      "id":"766fa866-a950-4b12-adff-c11fa4cf8fdc",
-         "name":"cloudamqp",
-         "description":"Managed HA RabbitMQ servers in the cloud",
-         "requires":[
-
-         ],
-         "tags":[
-            "amqp",
-            "rabbitmq",
-            "messaging"
-         ],
-         "metadata":{
-            "displayName":"CloudAMQP",
-            "imageUrl":"https://d33na3ni6eqf5j.cloudfront.net/app_resources/18492/thumbs_112/img9069612145282015279.png",
-            "longDescription":"Managed, highly available, RabbitMQ clusters in the cloud",
-            "providerDisplayName":"84codes AB",
-            "documentationUrl":"http://docs.cloudfoundry.com/docs/dotcom/marketplace/services/cloudamqp.html",
-            "supportUrl":"http://www.cloudamqp.com/support.html"
-         },
-         "dashboard_client":{
-            "id": "p-mysql-client",
-            "secret": "p-mysql-secret",
-            "redirect_uri": "http://p-mysql.example.com/auth/create"
-         },
-         "plans":[
-            {
-               "id":"024f3452-67f8-40bc-a724-a20c4ea24b1c",
-               "name":"bunny",
-               "description":"A mid-sided plan",
-               "metadata":{
-                  "bullets":[
-                     "20 GB of messages",
-                     "20 connections"
-                  ],
-                  "costs":[
-                     {
-                        "amount":{
-                           "usd":99.0
-                        },
-                        "unit":"MONTHLY"
-                     },
-                     {
-                        "amount":{
-                           "usd":0.99
-                        },
-                        "unit":"1GB of messages over 20GB"
-                     }
-                  ],
-                  "displayName":"Big Bunny"
-               }
-            }
-         ]
-      }
-   ]
-}
-```
-
-## <a id='example-cc-response'></a>Example Cloud Controller Response Body ##
-
-<!-- **TODO I don't think we need the response example. What is it trying to show?** -->
-
-
-```
-{
-   "metadata":{
-      "guid":"bc8748f1-fe05-444d-ab7e-9798e1f9aef6",
-      "url":"/v2/services/bc8748f1-fe05-444d-ab7e-9798e1f9aef6",
-      "created_at":"2014-01-08T18:52:16+00:00",
-      "updated_at":"2014-01-09T03:19:16+00:00"
-   },
-   "entity":{
-      "label":"cloudamqp",
-      "provider":"cloudamqp",
-      "url":"http://adgw.a1.cf-app.example.com",
-      "description":"Managed HA RabbitMQ servers in the cloud",
-      "long_description":null,
-      "version":"n/a",
-      "info_url":null,
-      "active":true,
-      "bindable":true,
-      "unique_id":"18723",
-      "extra":{
-         "displayName":"CloudAMQP",
-         "imageUrl":"https://d33na3ni6eqf5j.cloudfront.net/app_resources/18723/thumbs_112/img9069612145282015279.png",
-         "longDescription":"Managed, highly available, RabbitMQ clusters in the cloud",
-         "providerDisplayName":"84codesAB",
-         "documentationUrl":null,
-         "supportUrl":null
-      },
-      "tags":[
-         "amqp",
-         "rabbitmq"
-      ],
-      "requires":[
-
-      ],
-      "documentation_url":null,
-      "service_plans":[
-         {
-            "metadata":{
-               "guid":"6c4903ab-14ce-41de-adb2-632cf06117a5",
-               "url":"/v2/services/6c4903ab-14ce-41de-adb2-632cf06117a5",
-               "created_at":"2013-11-01T00:21:25+00:00",
-               "updated_at":"2014-01-09T03:19:16+00:00"
-            },
-            "entity":{
-               "name":"bunny",
-               "free":true,
-               "description":"Big Bunny",
-               "service_guid":"bc8748f1-fe05-444d-ab7e-9798e1f9aef6",
-               "extra":{
-                  "bullets":[
-                     "20 GB of messages",
-                     "20 connections"
-                  ],
-                  "costs":[
-                     {
-                        "amount":{
-                           "usd":99.0
-                        },
-                        "unit":"MONTHLY"
-                     },
-                     {
-                        "amount":{
-                           "usd":0.99
-                        },
-                        "unit":"1GB of messages over 20GB"
-                     }
-                  ],
-                  "displayName":"Big Bunny"
-               },
-               "unique_id":"addonOffering_1889",
-               "public":true
-            }
-         }
-      ]
-   }
-}
-```
-
-
 # Dashboard Single Sign-On
 
 <!-- **TODO Are we supporting this at all?** -->
@@ -2382,139 +2516,6 @@ The UAA OmniAuth strategy is used to first get an authorization code, as documen
   * [User Account and Authentication (UAA) Service APIs](https://github.com/cloudfoundry/uaa/blob/master/docs/UAA-APIs.rst)
 
 [example-broker]: https://github.com/cloudfoundry/cf-mysql-broker
-
-# Examples
-
-<!-- **TODO keep. move to the end?** -->
-
-
-The following example service broker applications have been developed - these are a great starting point if you are developing your own service broker.
-
-## Ruby
-
-* [GitHub repo service](https://github.com/cloudfoundry-samples/github-service-broker-ruby) - this is designed to be an easy-to-read example of a service broker, with complete documentation, and comes with a demo app that uses the service. The broker can be deployed as an application to any Cloud Foundry instance or hosted elsewhere. The service broker uses GitHub as the service back end.
-* [MySQL database service](https://github.com/cloudfoundry/cf-mysql-release) - this broker and its accompanying MySQL server are designed to be deployed together as a [BOSH](https://github.com/cloudfoundry/bosh) release. BOSH is used to deploy or upgrade the release, monitors the health of running components, and restarts or recreates unhealthy VMs. The broker code alone can be found [here](https://github.com/cloudfoundry/cf-mysql-broker).
-
-## Java
-
-* [Spring Cloud - Cloud Foundry Service Broker](https://github.com/spring-cloud/spring-cloud-cloudfoundry-service-broker) - This implements the REST contract for service brokers and the artifacts are published to the spring maven repo.  This greatly simplifies development: include a single dependency in Gradle, implement interfaces, and configure. A sample implementation has been provided for [MongoDB](https://github.com/spring-cloud-samples/cloudfoundry-service-broker).
-* [MySQL Java Broker](https://github.com/cloudfoundry-community/cf-mysql-java-broker) - a Java port of the Ruby-based [MySQL broker](https://github.com/cloudfoundry/cf-mysql-broker) above.
-
-## Go
-
-* [Asynchronous Service Broker for AWS EC2](https://github.com/cloudfoundry-samples/go_service_broker) - This broker implements support for the experimental [Asynchronous Service Operations](./api.html#asynchronous-operations), and calls AWS APIs to provision EC2 VMs.
-
-# Binding Credentials
-
-<!-- **TODO we can't call this thing vcap_services without an explanation of -->
-
-what vcap means. it's not clear where this is returned from. should
-pick either a combined uri, or individual fields, not both.**
-
-A bindable service returns credentials that an application can consume in response to the `cf bind` API call.
-Cloud Foundry writes these credentials to the [`VCAP_SERVICES`](../devguide/deploy-apps/environment-variable.html#VCAP-SERVICES) environment variable.
-In some cases, buildpacks write a subset of these credentials to other
-environment variables that frameworks might need.
-
-Choose from the following list of credential fields if possible, though you can provide additional fields as needed.
-Refer to the [Using Bound Services](../devguide/services/managing-services.html#use) section of the
-_Managing Service Instances with the CLI_ topic for information on how these
-credentials are consumed.
-
-<p class='note'><strong>Note</strong>: If you provide a service that supports a connection string, provide the <code>uri</code> key for buildpacks and
-application libraries to use.</p>
-
-<table border="1" class="nice">
-  <tr>
-    <th><strong>CREDENTIALS</strong></th>
-    <th><strong>DESCRIPTION</strong></th>
-  </tr>
-  <tr>
-    <td>uri</td>
-    <td>Connection string of the form <code>DB-TYPE://USERNAME:PASSWORD@HOSTNAME:PORT/NAME</code>,
-    where <code>DB-TYPE</code> is a type of database such as mysql, postgres, mongodb, or amqp.</td>
-  </tr>
-  <tr>
-    <td>hostname</td>
-    <td>FQDN of the server host</td>
-  </tr>
-  <tr>
-    <td>port</td>
-    <td>Port of the server host</td>
-  </tr>
-  <tr>
-    <td>name</td>
-    <td>Name of the service instance</td>
-  </tr>
-  <tr>
-    <td>vhost</td>
-    <td>Name of the messaging server virtual host - a replacement for a <code>name</code> specific to AMQP providers</td>
-  </tr>
-  <tr>
-    <td>username</td>
-    <td>Server user</td>
-  </tr>
-  <tr>
-    <td>password</td>
-    <td>Server password</td>
-  </tr>
-</table>
-
-The following is an example output of `ENV['VCAP_SERVICES']`.
-
-<p class='note'><strong>Note</strong>: Depending on the types of databases you are using, each database might return different credentials.</p>
-
-<pre>
-VCAP_SERVICES=
-{
-  cleardb: [
-    {
-      name: "cleardb-1",
-      label: "cleardb",
-      plan: "spark",
-      credentials: {
-        name: "ad_c6f4446532610ab",
-        hostname: "us-cdbr-east-03.cleardb.com",
-        port: "3306",
-        username: "b5d435f40dd2b2",
-        password: "ebfc00ac",
-        uri: "mysql://b5d435f40dd2b2:ebfc00ac@us-cdbr-east-03.cleardb.com:3306/ad_c6f4446532610ab",
-        jdbcUrl: "jdbc:mysql://b5d435f40dd2b2:ebfc00ac@us-cdbr-east-03.cleardb.com:3306/ad_c6f4446532610ab"
-      }
-    }
-  ],
-  cloudamqp: [
-    {
-      name: "cloudamqp-6",
-      label: "cloudamqp",
-      plan: "lemur",
-      credentials: {
-        uri: "amqp://ksvyjmiv:IwN6dCdZmeQD4O0ZPKpu1YOaLx1he8wo@lemur.cloudamqp.com/ksvyjmiv"
-      }
-    }
-    {
-      name: "cloudamqp-9dbc6",
-      label: "cloudamqp",
-      plan: "lemur",
-      credentials: {
-        uri: "amqp://vhuklnxa:9lNFxpTuJsAdTts98vQIdKHW3MojyMyV@lemur.cloudamqp.com/vhuklnxa"
-      }
-    }
-  ],
-  rediscloud: [
-    {
-      name: "rediscloud-1",
-      label: "rediscloud",
-      plan: "20mb",
-      credentials: {
-        port: "6379",
-        host: "pub-redis-6379.us-east-1-2.3.ec2.redislabs.com",
-        password: "1M5zd3QfWi9nUyya"
-      }
-    },
-  ],
-}
-</pre>
 
 # Application Log Streaming
 
@@ -2822,10 +2823,9 @@ Support for this header was introduced in cf-release v212.
 
 # Volume Services (Experimental)
 
-<!-- **TODO cf experimental. drop or keep? seems to be a way of providing -->
-
+<!-- **TODO cf experimental. drop or keep? seems to be a way of providing 
 access to a service where you provide a file interface instead of a
-url**
+url** -->
 
 ## <a id='introduction'></a>Introduction ##
 
@@ -2855,70 +2855,31 @@ Cloud Foundry application developers may want their applications to mount one or
 </table>
 
 ### volume_mount ###
-A `volume_mount` represents a remote storage device to be attached and mounted into the app container filesystem via a Volume Driver.
-<table border="1" class="nice">
- <thead>
- <tr>
-   <th>Field</th>
-   <th>Type</th>
-   <th>Description</th>
- </tr>
- </thead>
- <tbody>
- <tr>
-   <td>driver</td>
-   <td>string</td>
-   <td>Name of the volume driver plugin which manages the device</td>
- </tr>
- <tr>
-   <td>container\_dir</td>
-   <td>string</td>
-   <td>The directory to mount inside the application container</td>
- </tr>
- <tr>
-   <td>mode</td>
-   <td>string</td>
-   <td><tt>"r"</tt> to mount the volume read-only, or <tt>"rw"</tt> to mount it read-write</td>
- </tr>
- <tr>
-   <td>device\_type</td>
-   <td>string</td>
-   <td>A string specifying the type of device to mount. Currently only <tt>"shared"</tt> devices are supported.</td>
- </tr>
- <tr>
-   <td>device</td>
-   <td>device-object</td>
-   <td>Device object containing device\_type specific details. Currently only <tt>shared_device</tt> devices are supported.</td>
- </tr>
- </tbody>
- </table>
 
+A `volume_mount` represents a remote storage device to be attached and mounted into the app container filesystem via a Volume Driver.
+
+
+| Field          | Type          | Description                                                                                                   |
+|----------------|---------------|---------------------------------------------------------------------------------------------------------------|
+| driver         | string        | Name of the volume driver plugin which manages the device                                                     |
+| container\_dir | string        | The directory to mount inside the application container                                                       |
+| mode           | string        | `"r"` to mount the volume read-only, or `"rw"` to mount it read-write                                         |
+| device\_type   | string        | A string specifying the type of device to mount. Currently only `"shared"` devices are supported.             |
+| device         | device-object | Device object containing device\_type specific details. Currently only `shared_device` devices are supported. |
+ 
 ### shared_device ###
+
 A `shared_device` is a subtype of a device. It represents a distributed file system which can be mounted on all app instances simultaneously.
-<table border="1" class="nice">
- <thead>
- <tr>
-   <th>Field</th>
-   <th>Type</th>
-   <th>Description</th>
- </tr>
- </thead>
- <tbody>
- <tr>
-   <td>volume\_id</td>
-   <td>string</td>
-   <td>ID of the shared volume to mount on every app instance</td>
- </tr>
- <tr>
-   <td>mount\_config</td>
-   <td>object</td>
-   <td>Configuration object to be passed to the driver when the volume is mounted (optional)</td>
- </tr>
- </tbody>
- </table>
+
+
+| Field         | Type   | Description                                                                           |
+|---------------|--------|---------------------------------------------------------------------------------------|
+| volume\_id    | string | ID of the shared volume to mount on every app instance                                |
+| mount\_config | object | Configuration object to be passed to the driver when the volume is mounted (optional) |
 
 ### Example ###
-<pre class="terminal">
+
+```
 {
   ...
   "volume_mounts": [
@@ -2936,12 +2897,11 @@ A `shared_device` is a subtype of a device. It represents a distributed file sys
     }
   ]
 }
-</pre>
+```
 
 # Volume Services (Experimental/Obsolete) #
 
 <!-- **TODO obsolete version of an experimental extension. definitely drop.** -->
-
 
 ## <a id='introduction'></a>Introduction ##
 
