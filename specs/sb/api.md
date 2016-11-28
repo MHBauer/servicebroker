@@ -45,37 +45,6 @@ different URL prefixes and credentials.
 
 <image src="images/v2services-new.png" width="960" height="720" style='background-color:#fff'>
 
-## <a id='api-version-header'></a>API Version Header ##
-
-Requests from the Cloud Controller to the broker contain a header that defines
-the version number of the Broker API that Cloud Controller will use.
-This header will be useful in future minor revisions of the API to allow
-brokers to reject requests from Cloud Controllers that they do not understand.
-While minor API revisions will always be additive, it is possible that brokers
-will come to depend on a feature that was added after 2.0, so they may use this
-header to reject the request.
-Error messages from the broker in this situation should inform the operator of
-what the required and actual version numbers are so that an operator can go
-upgrade Cloud Controller and resolve the issue.
-A broker should respond with a `412 Precondition Failed` message when rejecting
-a request.
-
-The version numbers are in the format `MAJOR.MINOR`, using semantic versioning
-such that 2.9 comes before 2.10.
-An example of this header as of publication time is:
-
-`X-Broker-Api-Version: 2.9`
-
-## <a id='authentication'></a>Authentication ##
-
-Cloud Controller (final release v145+) authenticates with the Broker using HTTP
-basic authentication (the `Authorization:` header) on every request and will
-reject any broker registrations that do not contain a username and password.
-The broker is responsible for checking the username and password and returning
-a `401 Unauthorized` message if credentials are invalid.
-Cloud Controller supports connecting to a broker using SSL if additional
-security is desired.
-
 ## <a id='catalog-mgmt'></a>Catalog Management ##
 
 The first endpoint that a broker must implement is the service catalog.
@@ -487,8 +456,6 @@ Responses with any other status code will be interpreted as an error or invalid 
 
 ##### Body #####
 
-All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
-
 For success responses, the following fields are valid.
 
 <table border="1" class="nice">
@@ -677,8 +644,6 @@ Responses with any other status code will be interpreted as a failure. Brokers c
 
 ##### Body #####
 
-All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
-
 For success responses, the following fields are supported. Others will be ignored. For error responses, see [Broker Errors](#broker-errors).
 
 <table border="1" class="nice">
@@ -850,8 +815,6 @@ $ curl http://username:password@broker-url/v2/service_instances/:instance_id -d 
 Responses with any other status code will be interpreted as a failure. Brokers can include a user-facing message in the `description` field; for details see [Broker Errors](#broker-errors).
 
 ##### Body #####
-
-All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
 
 For success responses, the following fields are supported. Others will be ignored. For error responses, see [Broker Errors](#broker-errors).
 
@@ -1049,8 +1012,6 @@ Responses with any other status code will be interpreted as a failure and an unb
 
 ##### Body #####
 
-All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
-
 For success responses, the following fields are supported. Others will be ignored. For error responses, see [Broker Errors](#broker-errors).
 
 <table border="1" class="nice">
@@ -1107,6 +1068,9 @@ delete any resources it created in bind.
 Usually this means that an application immediately cannot access the resource.
 
 ### Request ###
+
+
+
 
 ##### Route #####
 `DELETE /v2/service_instances/:instance_id/service_bindings/:binding_id`
@@ -1171,8 +1135,6 @@ $ curl 'http://username:password@broker-url/v2/service_instances/:instance_id/
 Responses with any other status code will be interpreted as a failure and the binding will remain in the Cloud Controller database. Brokers can include a user-facing message in the `description` field; for details see [Broker Errors](#broker-errors).
 
 ##### Body #####
-
-All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
 
 For a success response, the expected response body is `{}`.
 
@@ -1264,8 +1226,6 @@ Responses with any other status code will be interpreted as a failure and the se
 
 ##### Body #####
 
-All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
-
 For success responses, the following fields are supported. Others will be ignored. For error responses, see [Broker Errors](#broker-errors).
 
 <table border="1" class="nice">
@@ -1288,44 +1248,6 @@ For success responses, the following fields are supported. Others will be ignore
 <pre class="terminal">
 {
  "operation": "task_10"
-}
-</pre>
-
-## <a id='broker-errors'></a>Broker Errors ##
-
-### Response ###
-
-Broker failures beyond the scope of the well-defined HTTP response codes listed
-above (like 410 on delete) should return an appropriate HTTP response code
-(chosen to accurately reflect the nature of the failure) and a body containing a valid JSON Object (not an array).
-
-##### Body #####
-
-All response bodies must be a valid JSON Object (`{}`). This is for future compatibility; it will be easier to add fields in the future if JSON is expected rather than to support the cases when a JSON body may or may not be returned.
-
-For error responses, the following fields are valid. Others will be ignored. If an empty JSON object is returned in the body `{}`, a generic message containing the HTTP response code returned by the broker will be displayed to the requestor.
-
-<table border="1" class="nice">
-<thead>
-<tr>
-  <th>Response Field</th>
-  <th>Type</th>
-  <th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-  <td>description</td>
-  <td>string</td>
-  <td>An error message explaining why the request failed. This message will be displayed to the user who initiated the request.
-</td>
-</tr>
-</tbody>
-</table>
-
-<pre class="terminal">
-{
-  "description": "Something went wrong. Please contact support at http://support.example.com."
 }
 </pre>
 
